@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside class="bb-sidebar" id="bbSidebar" th:fragment="sidebar(activePage)">
+    <button class="bb-sidebar-toggle" id="bbSidebarToggle" type="button" aria-label="Ocultar barra lateral" aria-expanded="true" title="Ocultar barra lateral">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <a class="bb-sidebar-brand" th:href="@{/admin/dashboard}" aria-label="Beauty Boost Dashboard">
+        <img src="https://res.cloudinary.com/rzxmfg9i/image/upload/logo.png" alt="Beauty Boost">
+        <span>BEAUTY BOOST<small>BEAUTY STORE</small></span>
+    </a>
+
+    <div class="bb-admin-profile">
+        <div class="bb-avatar"><i class="fas fa-user"></i></div>
+        <div>
+            <strong th:text="${session.usuarioLogueado != null ? session.usuarioLogueado.nombre + ' ' + session.usuarioLogueado.apellido : 'Administrador'}">Administrador</strong>
+            <small>ADMIN</small>
+        </div>
+    </div>
+
+    <nav class="bb-nav" aria-label="NavegaciÃ³n administrativa">
+        <a th:classappend="${activePage == 'dashboard'} ? 'active'" th:href="@{/admin/dashboard}">
+            <i class="fas fa-chart-line"></i><span>Dashboard</span>
+        </a>
+        <a th:classappend="${activePage == 'productos'} ? 'active'" th:href="@{/admin/productos}">
+            <i class="fas fa-box-open"></i><span>Productos</span>
+        </a>
+        <a th:classappend="${activePage == 'pedidos'} ? 'active'" th:href="@{/admin/pedidos}">
+            <i class="fas fa-receipt"></i><span>Pedidos</span>
+        </a>
+        <a th:classappend="${activePage == 'usuarios'} ? 'active'" th:href="@{/admin/usuarios}">
+            <i class="fas fa-users"></i><span>Usuarios</span>
+        </a>
+        <a th:classappend="${activePage == 'resenas'} ? 'active'" th:href="@{/admin/resenas}">
+            <i class="fas fa-star"></i><span>ReseÃ±as</span>
+        </a>
+        <a th:href="@{/}">
+            <i class="fas fa-store"></i><span>Ver tienda</span>
+        </a>
+    </nav>
+
+    <div class="bb-sidebar-spacer"></div>
+
+    <a class="bb-logout" th:href="@{/logout}">
+        <i class="fas fa-right-from-bracket"></i><span>Cerrar SesiÃ³n</span>
+    </a>
+</aside>
+</body>
+</html>
+

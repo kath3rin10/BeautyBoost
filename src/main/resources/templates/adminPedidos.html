@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Beauty Boost | Gestión de Pedidos</title>
+    <th:block th:replace="~{admin/includes/head :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}">`n</head>
+<body class="bb-admin-body">
+
+<aside th:replace="~{admin/includes/sidebar :: sidebar('pedidos')}"></aside>
+
+<main class="bb-main">
+    <header th:replace="~{admin/includes/topbar :: topbar('GESTIÓN DE PEDIDOS')}"></header>
+
+    <section class="bb-content">
+        <div id="alertaPedidos" class="alert-success" style="display: none;"></div>
+
+        <div class="admin-page-heading">
+            <div>
+                <span class="eyebrow">CENTRO DE CONTROL</span>
+                <h1>Gestión de pedidos</h1>
+                <p>Consulta pedidos y actualiza sus estados de forma segura.</p>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Listado General de Pedidos y Envíos</h3>
+                <span class="bb-inline-ccdca83d16">Actualice el estado de los pedidos de forma interactiva</span>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID Pedido</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Total (COP)</th>
+                    <th>Transportadora</th>
+                    <th>Guía de Envíos</th>
+                    <th>Estado Actual</th>
+                    <th>Cambiar Estado</th>
+                </tr>
+                </thead>
+                <tbody id="tablaPedidosBody">
+                <tr>
+                    <td colspan="8" class="bb-inline-6c9cd9926d">Cargando pedidos...</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<th:block th:replace="~{admin/includes/footer :: footer}"></th:block>
+
+<script>
+    const ESTADOS_PEDIDO = {
+        1: "Pendiente",
+        2: "En camino",
+        3: "Entregado"
+    };
+
+    let listaPedidosGlobal = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarPedidos();
+
+        const searchInput = document.getElementById("adminSearch");
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                const termino = e.target.value.toLowerCase().trim();
+                const filtrados = listaPedidosGlobal.filter(p => {
+                    const id = String(p.idPedido || p.id || "");
+                    const cliente = obtenerNombreCliente(p).toLowerCase();
+                    const guia = String(p.codigoSeguimiento || "").toLowerCase();
+                    const transportadora = String(p.empresaEnvio || "").toLowerCase();
+                    const estado = obtenerNombreEstado(p).toLowerCase();
+                    return id.includes(termino) ||
+                        cliente.includes(termino) ||
+                        guia.includes(termino) ||
+                        transportadora.includes(termino) ||
+                        estado.includes(termino);
+                });
+                renderizarTablaPedidos(filtrados);
+            });
+        }
+    });
+
+    async function cargarPedidos() {
+        const tbody = document.getElementById("tablaPedidosBody");
+        try {
+            const resp = await fetch("/api/pedido");
+            if (!resp.ok) throw new Error("Error HTTP " + resp.status);
+            const data = await resp.json();
+            listaPedidosGlobal = Array.isArray(data) ? data : (data.content || []);
+            renderizarTablaPedidos(listaPedidosGlobal);
+        } catch (err) {
+            console.error("Error cargando pedidos:", err);
+            tbody.innerHTML = `<tr><td colspan="8" class="bb-inline-6c9cd9926d">No se pudieron cargar los pedidos desde el servidor.</td></tr>`;
+        }
+    }
+
+    function obtenerIdPedido(ped) {
+        return ped.idPedido ?? ped.id ?? 0;
+    }
+
+    function obtenerNombreCliente(ped) {
+        if (ped.cliente && typeof ped.cliente === "string") return ped.cliente;
+        if (ped.usuario) {
+            return `${ped.usuario.nombre || ""} ${ped.usuario.apellido || ""}`.trim() || ped.usuario.correo || "Cliente";
+        }
+        return ped.nombreCliente || "Sin cliente";
+    }
+
+    function obtenerIdEstado(ped) {
+        if (typeof ped.idEstado === "number") return ped.idEstado;
+        if (typeof ped.estadosPedidoIdEstado === "number") return ped.estadosPedidoIdEstado;
+        if (ped.estadoPedido && typeof ped.estadoPedido === "object") {
+            return ped.estadoPedido.idEstado ?? ped.estadoPedido.id ?? 1;
+        }
+        return 1;
+    }
+
+    function obtenerNombreEstado(ped) {
+        if (ped.estado && typeof ped.estado === "string") return ped.estado;
+        if (ped.estadoPedido && typeof ped.estadoPedido === "object") {
+            return ped.estadoPedido.nombre || ped.estadoPedido.descripcion || ESTADOS_PEDIDO[obtenerIdEstado(ped)] || "Pendiente";
+        }
+        return ESTADOS_PEDIDO[obtenerIdEstado(ped)] || "Pendiente";
+    }
+
+    function formatearFecha(fechaRaw) {
+        if (!fechaRaw) return "-";
+        const d = new Date(fechaRaw);
+        if (isNaN(d.getTime())) return String(fechaRaw);
+        return d.toLocaleDateString("es-CO", { year: "numeric", month: "2-digit", day: "2-digit" });
+    }
+
+    function formatearMoneda(valor) {
+        const num = Number(valor || 0);
+        return "$ " + Math.round(num).toLocaleString("es-CO");
+    }
+
+    function renderizarTablaPedidos(pedidos) {
+        const tbody = document.getElementById("tablaPedidosBody");
+        if (!pedidos || pedidos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="bb-inline-6c9cd9926d">No hay pedidos registrados en el sistema.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = pedidos.map(ped => {
+            const id = obtenerIdPedido(ped);
+            const fecha = formatearFecha(ped.fecha || ped.fechaPedido);
+            const cliente = obtenerNombreCliente(ped);
+            const total = formatearMoneda(ped.total);
+            const empresaEnvio = ped.empresaEnvio ? ped.empresaEnvio : "Sin asignar";
+            const guia = ped.codigoSeguimiento ? ped.codigoSeguimiento : "N/A";
+            const idEstado = obtenerIdEstado(ped);
+            const nombreEstado = obtenerNombreEstado(ped);
+
+            return `
+                <tr>
+                    <td><strong>#${id}</strong></td>
+                    <td>${fecha}</td>
+                    <td>${cliente}</td>
+                    <td>${total}</td>
+                    <td>${empresaEnvio}</td>
+                    <td>${guia}</td>
+                    <td>
+                        <span class="bb-inline-90038280ae order-status-badge" data-pedido-id="${id}">
+                            ${nombreEstado}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="bb-inline-3a8ee43064 order-status-form" data-pedido-id="${id}">
+                            <select class="form-control order-status-select"
+                                    data-previous="${idEstado}"
+                                    onchange="actualizarEstadoPedido(this, ${id})">
+                                <option value="1" ${idEstado === 1 ? "selected" : ""}>Pendiente</option>
+                                <option value="2" ${idEstado === 2 ? "selected" : ""}>En camino</option>
+                                <option value="3" ${idEstado === 3 ? "selected" : ""}>Entregado</option>
+                            </select>
+                            <span class="order-status-saving" aria-live="polite"></span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function actualizarEstadoPedido(select, idPedido) {
+        const wrapper = select.closest(".order-status-form");
+        const previo = select.dataset.previous || select.value;
+        const nuevoEstadoId = parseInt(select.value, 10);
+
+        select.disabled = true;
+        const saving = wrapper ? wrapper.querySelector(".order-status-saving") : null;
+        if (saving) saving.textContent = "Guardando…";
+
+        try {
+            const pedidoActual = listaPedidosGlobal.find(p => obtenerIdPedido(p) === idPedido) || {};
+            const payload = {
+                ...pedidoActual,
+                idPedido: idPedido,
+                idEstado: nuevoEstadoId,
+                estadosPedidoIdEstado: nuevoEstadoId,
+                estadoPedido: { idEstado: nuevoEstadoId }
+            };
+
+            const resp = await fetch(`/api/pedido/${idPedido}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) {
+                throw new Error("No fue posible actualizar el estado (HTTP " + resp.status + ")");
+            }
+
+            select.dataset.previous = String(nuevoEstadoId);
+            const nuevoNombre = ESTADOS_PEDIDO[nuevoEstadoId] || "Actualizado";
+
+            const badge = document.querySelector(`.order-status-badge[data-pedido-id="${idPedido}"]`);
+            if (badge) badge.textContent = nuevoNombre;
+
+            if (saving) {
+                saving.textContent = "✓ Actualizado";
+                setTimeout(() => saving.textContent = "", 1800);
+            }
+        } catch (e) {
+            select.value = previo;
+            if (saving) {
+                saving.textContent = "No se pudo guardar";
+                setTimeout(() => saving.textContent = "", 2200);
+            }
+            alert(e.message || "No fue posible actualizar el estado.");
+        } finally {
+            select.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
+

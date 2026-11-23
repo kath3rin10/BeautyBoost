@@ -1,0 +1,3 @@
+<script src="${pageContext.request.contextPath}/Vista/js/admin-layout.js?v=20260924"></script>
+<script src="${pageContext.request.contextPath}/Vista/js/validaciones.js"></script>
+<script src="${pageContext.request.contextPath}/Vista/js/beauty-boost.js"></script>

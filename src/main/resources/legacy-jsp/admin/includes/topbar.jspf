@@ -1,0 +1,11 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<header class="bb-topbar">
+    <div class="bb-topbar-left">
+        <button class="bb-menu" type="button" id="bbMenu" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
+        <div><small>BEAUTY BOOST</small><h1><%= tituloAdmin %></h1></div>
+    </div>
+    <div class="bb-topbar-right">
+        <label class="bb-search" for="adminSearch"><i class="fas fa-search"></i><input id="adminSearch" type="search" placeholder="Buscar en esta sección..." autocomplete="off"></label>
+        <a class="bb-profile-link" href="${pageContext.request.contextPath}/AdminUsuariosServlet?action=ver&idUsuario=<%= admin.getIdUsuario() %>" title="Ver mi perfil"><i class="fas fa-user-circle"></i><span><%= admin.getNombre() %></span></a>
+    </div>
+</header>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Boost - Carrito</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body class="catalog-page" data-cloudinary-base="https://res.cloudinary.com/rzxmfg9i/image/upload/">
+
+    <!-- HEADER SUPERIOR ESTRUCTURADO -->
+    <header class="custom-header">
+        <div class="header-top-row">
+            <div class="header-logo-circle">
+                <img src="https://res.cloudinary.com/rzxmfg9i/image/upload/v1789523154/logo.png" alt="Logo Beauty Boost">
+            </div>
+            <div class="app-name-oval">
+                <h1>BEAUTY BOOST</h1>
+            </div>
+            <div class="header-right-space"></div>
+        </div>
+    </header>
+
+    <!-- NAVBAR HORIZONTAL DE NAVEGACIÓN Y BÚSQUEDA -->
+    <nav class="horizontal-navbar">
+        <div class="navbar-categories">
+            <a th:href="@{/productos}" href="/productos" class="navbar-link">Todo</a>
+            <a th:href="@{/productos}" href="/productos" class="navbar-link">Maquillaje</a>
+            <a th:href="@{/productos}" href="/productos" class="navbar-link">Cuidado Facial</a>
+            <a th:href="@{/productos}" href="/productos" class="navbar-link">Brochas</a>
+            <a th:href="@{/productos}" href="/productos" class="navbar-link">Novedades</a>
+            <a th:href="@{/productos}" href="/productos" class="navbar-link">Más Vendidos</a>
+        </div>
+        <div class="navbar-right">
+            <a th:href="@{/perfil}" href="/perfil" class="navbar-icon-btn" title="Mi Cuenta">👤</a>
+            <a th:href="@{/carrito}" href="/carrito" class="navbar-icon-btn cart-active-icon" title="Carrito">🛒</a>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL DEL CARRITO -->
+    <main class="cart-page-shell">
+        <div class="cart-breadcrumb-wrap">
+            <a th:href="@{/productos}" href="/productos" class="cart-back-link">← Seguir comprando</a>
+        </div>
+
+        <div class="cart-page-heading">
+            <div>
+                <span class="cart-eyebrow">BEAUTY BOOST · TU COMPRA</span>
+                <h2 class="cart-section-title">Tu carrito</h2>
+                <p class="cart-heading-copy">Revisa tus productos, ajusta las cantidades y continúa cuando estés lista.</p>
+            </div>
+            <div class="cart-heading-badge"><span>🛍</span> Compra segura</div>
+        </div>
+
+        <div class="cart-grid-layout">
+            <section class="cart-items-box cart-products-panel">
+                <div class="cart-panel-heading">
+                    <div>
+                        <h3>Productos seleccionados</h3>
+                        <p id="cartItemCountLabel">0 productos</p>
+                    </div>
+                    <a th:href="@{/productos}" href="/productos" class="cart-add-more">+ Agregar más</a>
+                </div>
+                <div id="cartItemsContainer">
+                    <!-- Se llena dinámicamente con JavaScript -->
+                </div>
+            </section>
+
+            <aside class="cart-summary-box">
+                <div class="cart-summary-top">
+                    <span class="cart-summary-kicker">RESUMEN DE PEDIDO</span>
+                    <div class="cart-summary-icon">♡</div>
+                </div>
+                <h3 class="cart-summary-title">Tu compra</h3>
+
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <strong id="resumenSubtotal">$0</strong>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Envío</span>
+                    <strong class="cart-free-shipping">Por calcular</strong>
+                </div>
+                <div class="cart-summary-row cart-border-bottom">
+                    <span>Impuestos</span>
+                    <strong>Incluidos</strong>
+                </div>
+
+                <div class="cart-summary-total-row">
+                    <span>Total estimado</span>
+                    <strong id="resumenTotal" class="cart-total-color">$0</strong>
+                </div>
+
+                <div class="cart-cod-highlight">
+                    <span class="cart-cod-icon">📦</span>
+                    <div><strong>Pago efectivo contra entrega</strong><small>Paga al recibir tu pedido.</small></div>
+                </div>
+
+                <button onclick="procesarPago()" class="btn-primary-cart">
+                    <span>Continuar al pago</span><span>→</span>
+                </button>
+                <p class="cart-secure-note">🔒 Tus datos se procesan de forma segura.</p>
+            </aside>
+        </div>
+    </main>
+
+    <!-- SCRIPT DE RENDERIZADO Y GESTIÓN DEL CARRITO -->
+    <script th:inline="javascript">
+        window.contextPath = "";
+        
+        const userEmail = /*[[${session.usuarioLogueado != null ? (session.usuarioLogueado.correo != null ? session.usuarioLogueado.correo : session.usuarioLogueado) : (session.usuario != null ? (session.usuario.correo != null ? session.usuario.correo : session.usuario) : '')}]]*/ "";
+
+        function getActiveCartKey() {
+            return 'beautyBoostCart_' + (userEmail ? userEmail : 'invitado');
+        }
+
+        const cloudinaryBase = 'https://res.cloudinary.com/rzxmfg9i/image/upload/';
+
+        function resolveCartImage(value) {
+            const raw = String(value || '').trim().replace(/\\/g, '/');
+            if (!raw || /^null$|^undefined$/i.test(raw)) return window.contextPath + '/Vista/img/default.jpg';
+            if (/^https?:\/\//i.test(raw)) return raw;
+            let clean = raw.replace(/^\/+/, '');
+            clean = clean.replace(/^.*?Vista\/img\//i, '');
+            clean = clean.replace(/^.*?web\/img\//i, '');
+            clean = clean.replace(/^img\//i, '');
+            if (!clean || /^default\.jpg$/i.test(clean)) return window.contextPath + '/Vista/img/default.jpg';
+            return cloudinaryBase + encodeURI(clean);
+        }
+
+        async function completarImagenesCarrito(carrito) { return carrito; }
+        async function validarStockCarrito(id, cantidad) { return {status:'success', stock: 10}; }
+        async function sincronizarStockCarrito(carrito) { return carrito; }
+
+        function mostrarAvisoStockCarrito(mensaje) {
+            let aviso = document.getElementById('bbCartStockNotice');
+            if (!aviso) {
+                aviso = document.createElement('div');
+                aviso.id = 'bbCartStockNotice';
+                aviso.className = 'cart-stock-notice';
+                const panel = document.querySelector('.cart-products-panel');
+                if (panel) panel.insertBefore(aviso, panel.querySelector('#cartItemsContainer'));
+            }
+            aviso.textContent = '⚠ ' + mensaje;
+            aviso.classList.add('show');
+            clearTimeout(window.__bbCartStockNoticeTimer);
+            window.__bbCartStockNoticeTimer = setTimeout(() => aviso.classList.remove('show'), 5000);
+        }
+
+        async function cargarCarrito() { try { const r = await fetch((window.contextPath||'')+'/api/usuario/sesion',{credentials:'same-origin'}); if (r.ok) { const d = await r.json(); const em = d && (d.correo || d.email) ? String(d.correo || d.email).trim() : ''; if (em) window.__bbCartEmail = em; } } catch(e) {} function getActiveCartKey() { return 'beautyBoostCart_' + ((window.__bbCartEmail || userEmail || '').trim() || 'invitado'); } let activeKey = 'bb_carrito_items'; if (!(JSON.parse(localStorage.getItem(activeKey) || '[]').length)) { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('beautyBoostCart_') && k !== activeKey) { try { const alt = JSON.parse(localStorage.getItem(k) || '[]'); if (Array.isArray(alt) && alt.length) { localStorage.setItem(activeKey, JSON.stringify(alt)); break; } } catch(e) {} } } }
+            const container = document.getElementById('cartItemsContainer');
+            if (!container) return;
+            let carrito = JSON.parse(localStorage.getItem('bb_carrito_items')) || [];
+            carrito = await sincronizarStockCarrito(carrito);
+            carrito = await completarImagenesCarrito(carrito);
+
+            if (carrito.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty-container">
+                        <div class="cart-empty-icon">🛍</div>
+                        <span class="cart-empty-label">AÚN NO HAS AGREGADO PRODUCTOS</span>
+                        <h3 class="cart-empty-title">Tu carrito está vacío</h3>
+                        <p class="cart-empty-desc">Descubre tus favoritos y agrégalos aquí para continuar con tu compra.</p>
+                        <a href="/productos" class="cart-empty-btn">EXPLORAR PRODUCTOS <span>→</span></a>
+                    </div>
+                `;
+                document.getElementById('resumenSubtotal').innerText = '$0';
+                document.getElementById('resumenTotal').innerText = '$0';
+                const countLabel = document.getElementById('cartItemCountLabel');
+                if (countLabel) countLabel.innerText = '0 productos';
+                return;
+            }
+
+            let subtotalGeneral = 0;
+
+            container.innerHTML = carrito.map((item, index) => {
+                let totalItem = (item.precio || 0) * (item.cantidad || 1);
+                subtotalGeneral += totalItem;
+
+                return `
+                    <article class="cart-item-row">
+                        <div class="cart-item-left">
+                            <div class="cart-item-img-box">
+                                <img src="${resolveCartImage(item.imagen)}" alt="${item.nombre}" class="cart-item-img" onerror="this.onerror=null;this.src='/Vista/img/default.jpg';">
+                            </div>
+                            <div class="cart-item-info">
+                                <span class="cart-item-tag">BEAUTY BOOST</span>
+                                <h4 class="cart-item-name">${item.nombre || 'Producto'}</h4>
+                                <p class="cart-item-price">$${Number(item.precio || 0).toLocaleString('es-CO')} <span>c/u</span></p>
+                            </div>
+                        </div>
+
+                        <div class="cart-item-right">
+                            <div class="cart-qty-block">
+                                <span class="cart-qty-label">Cantidad</span>
+                                <div class="cart-qty-controls">
+                                    <button type="button" onclick="cambiarCantidad(${index}, -1)" class="cart-qty-btn">−</button>
+                                    <span class="cart-qty-val">${item.cantidad || 1}</span>
+                                    <button type="button" onclick="cambiarCantidad(${index}, 1)" class="cart-qty-btn">+</button>
+                                </div>
+                            </div>
+                            <div class="cart-item-total-wrap">
+                                <span class="cart-item-total-label">Total</span>
+                                <strong class="cart-item-total-price">$${Number(totalItem).toLocaleString('es-CO')}</strong>
+                            </div>
+                            <button type="button" onclick="eliminarItem(${index})" class="cart-delete-btn" title="Eliminar producto">×</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            const countLabel = document.getElementById('cartItemCountLabel');
+            if (countLabel) countLabel.innerText = carrito.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0) + ' unidades';
+            document.getElementById('resumenSubtotal').innerText = '$' + Number(subtotalGeneral).toLocaleString('es-CO');
+            document.getElementById('resumenTotal').innerText = '$' + Number(subtotalGeneral).toLocaleString('es-CO');
+        }
+
+        async function cambiarCantidad(index, cambio) {
+            let carrito = JSON.parse(localStorage.getItem('bb_carrito_items')) || [];
+            if (!carrito[index]) return;
+            const nueva = (Number(carrito[index].cantidad) || 0) + Number(cambio || 0);
+            if (nueva <= 0) {
+                carrito.splice(index, 1);
+                localStorage.setItem('bb_carrito_items', JSON.stringify(carrito));
+                await cargarCarrito();
+                return;
+            }
+            carrito[index].cantidad = nueva;
+            localStorage.setItem('bb_carrito_items', JSON.stringify(carrito));
+            await cargarCarrito();
+        }
+
+        function eliminarItem(index) {
+            let carrito = JSON.parse(localStorage.getItem('bb_carrito_items')) || [];
+            carrito.splice(index, 1);
+            localStorage.setItem('bb_carrito_items', JSON.stringify(carrito));
+            cargarCarrito();
+        }
+
+        function procesarPago() {
+            let carrito = JSON.parse(localStorage.getItem('bb_carrito_items')) || [];
+            if (carrito.length === 0) {
+                window.location.href = '/checkout?carritoVacio=true';
+                return;
+            }
+            window.location.href = '/checkout';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarCarrito();
+        });
+    </script>
+</body>
+</html>

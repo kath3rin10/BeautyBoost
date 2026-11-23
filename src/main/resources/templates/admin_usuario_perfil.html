@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Beauty Boost | Perfil de Usuario</title>
+    <th:block th:replace="~{admin/includes/head :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}">`n</head>
+<body class="bb-admin-body">
+
+<aside th:replace="~{admin/includes/sidebar :: sidebar('usuarios')}"></aside>
+
+<main class="bb-main">
+    <header th:replace="~{admin/includes/topbar :: topbar('PERFIL DE USUARIO')}"></header>
+
+    <section class="bb-content">
+        <div id="alertaPerfil" class="alert-success" style="display: none;"></div>
+        <div id="alertaErrorPerfil" class="alert-danger" style="display: none;"></div>
+
+        <div class="admin-page-heading">
+            <div>
+                <span class="eyebrow">GESTIÓN DE CUENTAS</span>
+                <h1>Perfil de usuario</h1>
+                <p>Consulta y actualiza la información personal, rol y estado de la cuenta.</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/usuarios}" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a usuarios
+                </a>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Información del Usuario <span id="perfilTituloId"></span></h3>
+                <span id="perfilEstadoBadge" class="bb-inline-90038280ae">Cargando...</span>
+            </div>
+
+            <form id="formEditarPerfilUsuario" class="admin-form">
+                <input type="hidden" id="idUsuario" name="idUsuario">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" id="nombre" name="nombre" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apellido">Apellido</label>
+                        <input type="text" id="apellido" name="apellido" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="correo">Correo Electrónico</label>
+                        <input type="email" id="correo" name="correo" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="text" id="telefono" name="telefono" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rolesIdRol">Rol del Sistema</label>
+                        <select id="rolesIdRol" name="rolesIdRol" class="form-control" required>
+                            <option value="1">Administrador</option>
+                            <option value="2">Cliente</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estado">Estado de la Cuenta</label>
+                        <select id="estado" name="estado" class="form-control" required>
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <a th:href="@{/admin/usuarios}" class="btn-secondary">Cancelar</a>
+                    <button type="submit" id="btnGuardarPerfil" class="btn-primary">
+                        <i class="fas fa-save"></i> Guardar cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<th:block th:replace="~{admin/includes/footer :: footer}"></th:block>
+
+<script>
+    let usuarioOriginal = {};
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const idUsuario = params.get("id") || params.get("idUsuario");
+
+        if (!idUsuario) {
+            mostrarError("No se especificó el identificador del usuario en la URL.");
+            return;
+        }
+
+        cargarPerfilUsuario(idUsuario);
+
+        const form = document.getElementById("formEditarPerfilUsuario");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await guardarCambiosUsuario(idUsuario);
+        });
+    });
+
+    async function cargarPerfilUsuario(idUsuario) {
+        try {
+            const resp = await fetch(`/api/usuario/${idUsuario}`);
+            if (!resp.ok) throw new Error("No se pudo obtener el perfil (HTTP " + resp.status + ")");
+
+            const u = await resp.json();
+            usuarioOriginal = u;
+
+            const idReal = u.idUsuario ?? u.id ?? idUsuario;
+            document.getElementById("idUsuario").value = idReal;
+            document.getElementById("perfilTituloId").textContent = `#${idReal}`;
+            document.getElementById("nombre").value = u.nombre || "";
+            document.getElementById("apellido").value = u.apellido || "";
+            document.getElementById("correo").value = u.correo || u.email || "";
+            document.getElementById("telefono").value = u.telefono || "";
+            document.getElementById("direccion").value = u.direccion || "";
+
+            const idRol = u.rolesIdRol ?? (u.rol ? (u.rol.idRol ?? u.rol.id) : 2);
+            document.getElementById("rolesIdRol").value = String(idRol);
+
+            const activo = (u.estado === true || u.estado === 1 || String(u.estado).toLowerCase() === "activo") ? "1" : "0";
+            document.getElementById("estado").value = activo;
+            actualizarBadgeEstado(activo === "1");
+        } catch (err) {
+            console.error(err);
+            mostrarError(err.message || "Error al cargar los datos del usuario.");
+        }
+    }
+
+    async function guardarCambiosUsuario(idUsuario) {
+        const btn = document.getElementById("btnGuardarPerfil");
+        btn.disabled = true;
+        ocultarAlertas();
+
+        const rolSeleccionado = parseInt(document.getElementById("rolesIdRol").value, 10);
+        const estadoSeleccionado = parseInt(document.getElementById("estado").value, 10);
+
+        const payload = {
+            ...usuarioOriginal,
+            idUsuario: parseInt(idUsuario, 10),
+            nombre: document.getElementById("nombre").value.trim(),
+            apellido: document.getElementById("apellido").value.trim(),
+            correo: document.getElementById("correo").value.trim(),
+            telefono: document.getElementById("telefono").value.trim(),
+            direccion: document.getElementById("direccion").value.trim(),
+            rolesIdRol: rolSeleccionado,
+            rol: { idRol: rolSeleccionado },
+            estado: estadoSeleccionado
+        };
+
+        try {
+            const resp = await fetch(`/api/usuario/${idUsuario}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) throw new Error("No se pudieron guardar los cambios (HTTP " + resp.status + ")");
+
+            usuarioOriginal = payload;
+            actualizarBadgeEstado(estadoSeleccionado === 1);
+            mostrarExito("Perfil de usuario actualizado correctamente.");
+        } catch (err) {
+            console.error(err);
+            mostrarError(err.message || "Error al actualizar el perfil.");
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function actualizarBadgeEstado(esActivo) {
+        const badge = document.getElementById("perfilEstadoBadge");
+        badge.textContent = esActivo ? "Activo" : "Inactivo";
+    }
+
+    function mostrarExito(msg) {
+        const el = document.getElementById("alertaPerfil");
+        el.textContent = msg;
+        el.style.display = "block";
+    }
+
+    function mostrarError(msg) {
+        const el = document.getElementById("alertaErrorPerfil");
+        el.textContent = msg;
+        el.style.display = "block";
+    }
+
+    function ocultarAlertas() {
+        document.getElementById("alertaPerfil").style.display = "none";
+        document.getElementById("alertaErrorPerfil").style.display = "none";
+    }
+</script>
+</body>
+</html>
+

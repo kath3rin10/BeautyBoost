@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Boost - Carrito</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="catalog-page">
+
+    <!-- HEADER SUPERIOR ESTRUCTURADO -->
+    <header class="custom-header">
+        <div class="header-top-row">
+            <div class="header-logo-circle">
+                <img src="https://res.cloudinary.com/rzxmfg9i/image/upload/v1789523154/logo.png" alt="Logo Beauty Boost" onerror="this.style.display='none'">
+            </div>
+            <div class="app-name-oval">
+                <h1>BEAUTY BOOST</h1>
+            </div>
+            <div class="header-right-space"></div>
+        </div>
+    </header>
+
+    <!-- CAJA DE DEPURACIÓN TEMPORAL -->
+    <!-- CONTENEDOR PRINCIPAL DEL CARRITO -->
+    <main class="cart-main-container">
+        <div class="cart-header-title-box">
+            <a th:href="@{/productos}" class="cart-back-link">← Volver a productos</a>
+            <h2 class="cart-main-title">Tu Carrito</h2>
+        </div>
+
+        <div class="cart-grid-layout">
+            <div id="cartItemsContainer" class="cart-items-box">
+                <!-- Se llena con JS -->
+            </div>
+
+            <div class="cart-summary-box">
+                <h3 class="cart-summary-title">Resumen</h3>
+                <div class="cart-summary-row">
+                    <span>Subtotal</span><span id="lblSubtotal">$0</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Envío</span><span id="lblEnvio">$0</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Impuestos (5%)</span><span id="lblImpuestos">$0</span>
+                </div>
+                <div class="cart-summary-total-row">
+                    <span>Total</span><span id="lblTotal" class="cart-total-value">$0</span>
+                </div>
+                <button id="btnPagar" th:onclick="|window.location.href='@{/checkout}'|" class="cart-btn-checkout">IR A PAGAR</button>
+            </div>
+        </div>
+    </main>
+
+    <script th:src="@{/js/beauty-boost.js}"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reseñas | Beauty Boost</title>
+    <th:block th:replace="~{admin/includes/head :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}">`n</head>
+<body class="bb-admin-body">
+
+<aside th:replace="~{admin/includes/sidebar :: sidebar('resenas')}"></aside>
+
+<main class="bb-main">
+    <header th:replace="~{admin/includes/topbar :: topbar('RESEÑAS DE CLIENTES')}"></header>
+
+    <section class="bb-content">
+        <div class="admin-page-heading">
+            <div>
+                <span class="eyebrow">CLIENTES</span>
+                <h1>Reseñas</h1>
+                <p>Consulta el feedback registrado por los clientes.</p>
+            </div>
+        </div>
+
+        <section class="bb-panel">
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Producto</th>
+                        <th>Valoración</th>
+                        <th>Comentario</th>
+                        <th>Fecha</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tablaResenasBody">
+                    <tr>
+                        <td colspan="5" class="empty-admin-state">Cargando reseñas...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+</main>
+
+<th:block th:replace="~{admin/includes/footer :: footer}"></th:block>
+
+<script>
+(function () {
+    let resenasGlobal = [];
+
+    function esc(val) {
+        return String(val ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function obtenerCliente(r) {
+        if (r.usuario && typeof r.usuario === "object") {
+            return `${r.usuario.nombre || ""} ${r.usuario.apellido || ""}`.trim() || r.usuario.correo || "Cliente";
+        }
+        return r.usuario || r.nombreUsuario || "Cliente";
+    }
+
+    function obtenerCorreo(r) {
+        if (r.usuario && typeof r.usuario === "object") return r.usuario.correo || r.usuario.email || "";
+        return r.correo || "";
+    }
+
+    function obtenerProductoNombre(r) {
+        if (r.producto && typeof r.producto === "object") return r.producto.nombre || "Producto no disponible";
+        return r.producto || r.nombreProducto || "Producto no disponible";
+    }
+
+    function obtenerProductoId(r) {
+        if (r.producto && typeof r.producto === "object") return r.producto.idProducto ?? r.producto.id ?? 0;
+        return r.productoId ?? r.productosIdProducto ?? 0;
+    }
+
+    function generarEstrellas(calificacion) {
+        const rr = Math.max(0, Math.min(5, Math.round(Number(calificacion || 0))));
+        let html = '<span class="review-admin-stars">';
+        for (let st = 1; st <= 5; st++) {
+            html += `<span class="${st <= rr ? "filled" : ""}">★</span>`;
+        }
+        html += `</span> ${rr}/5`;
+        return html;
+    }
+
+    function formatearFecha(fechaRaw) {
+        if (!fechaRaw) return "-";
+        const d = new Date(fechaRaw);
+        if (isNaN(d.getTime())) return String(fechaRaw);
+        return d.toLocaleDateString("es-CO", { year: "numeric", month: "2-digit", day: "2-digit" });
+    }
+
+    function renderizarResenas(lista) {
+        const tbody = document.getElementById("tablaResenasBody");
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-admin-state">No hay reseñas registradas.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = lista.map(r => {
+            const cliente = obtenerCliente(r);
+            const correo = obtenerCorreo(r);
+            const prodNombre = obtenerProductoNombre(r);
+            const prodId = obtenerProductoId(r);
+            const comentario = r.observacion || r.comentario || "";
+            const fecha = formatearFecha(r.fecha || r.fechaResena);
+
+            return `
+                <tr>
+                    <td><strong>${esc(cliente)}</strong><br><small>${esc(correo)}</small></td>
+                    <td><strong>${esc(prodNombre)}</strong><br><small>#${prodId}</small></td>
+                    <td>${generarEstrellas(r.calificacion)}</td>
+                    <td>${esc(comentario)}</td>
+                    <td>${esc(fecha)}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function cargarResenas() {
+        const tbody = document.getElementById("tablaResenasBody");
+        try {
+            const resp = await fetch("/api/resena-usuario");
+            if (!resp.ok) throw new Error("Error HTTP " + resp.status);
+            const data = await resp.json();
+            resenasGlobal = Array.isArray(data) ? data : (data.content || []);
+            renderizarResenas(resenasGlobal);
+        } catch (err) {
+            console.error("Error cargando reseñas:", err);
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-admin-state">No se pudieron cargar las reseñas desde el servidor.</td></tr>`;
+        }
+    }
+
+    const searchInput = document.getElementById("adminSearch");
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            const filtradas = resenasGlobal.filter(r => {
+                const txt = `${obtenerCliente(r)} ${obtenerCorreo(r)} ${obtenerProductoNombre(r)} ${r.observacion || r.comentario || ""}`.toLowerCase();
+                return txt.includes(q);
+            });
+            renderizarResenas(filtradas);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", cargarResenas);
+})();
+</script>
+</body>
+</html>
+
+

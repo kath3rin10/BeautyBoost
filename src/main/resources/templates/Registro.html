@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Boost - Crear Cuenta</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+        input[type="password"]::-webkit-password-reveal-button {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="custom-header">
+        <div class="header-top-row">
+            <a th:href="@{/productos}" href="/productos" class="btn-back-circle" title="Volver">←</a>
+            <div class="app-name-oval">
+                <h1>BEAUTY BOOST</h1>
+            </div>
+            <div style="width: 36px;"></div>
+        </div>
+    </header>
+
+    <main class="register-container-main">
+
+        <div class="info-card-left">
+            <div>
+                <span class="welcome-pill">Bienvenida a Beauty Boost</span>
+                <h2>Regístrate y descubre un mundo de belleza personalizada</h2>
+                <p class="desc">Accede a recomendaciones especiales, ofertas exclusivas y seguimiento fácil de tus pedidos.</p>
+            </div>
+            <div>
+                <div class="feature-box-item">
+                    <strong>+50 marcas</strong>
+                    <span>Productos seleccionados</span>
+                </div>
+                <div class="feature-box-item">
+                    <strong>Envío rápido</strong>
+                    <span>Compras sin complicaciones</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card-right">
+            <h2>Crear cuenta</h2>
+            <p class="sub">Completa tus datos para empezar a comprar.</p>
+
+            <div id="registroFeedback" style="display:none;"></div>
+
+            <div th:if="${error != null and !#strings.isEmpty(error)}" class="login-feedback-error" role="alert" aria-live="polite">
+                <span th:text="${error}">Error al registrar.</span>
+            </div>
+
+            <form id="registroForm" th:action="@{/api/usuario/registro}" action="/api/usuario/registro" method="POST" novalidate>
+
+                <div class="form-row-double">
+                    <div class="form-group-custom">
+                        <label for="txtNombre">Nombres</label>
+                        <input type="text" id="txtNombre" name="txtNombre" class="form-control-custom" placeholder="Ingresa tus nombres" oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, '');">
+                        <div id="errorNombre" class="error-message"></div>
+                    </div>
+                    <div class="form-group-custom">
+                        <label for="txtApellido">Apellidos</label>
+                        <input type="text" id="txtApellido" name="txtApellido" class="form-control-custom" placeholder="Ingresa tus apellidos" oninput="this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ\s]/g, '');">
+                        <div id="errorApellido" class="error-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-row-double">
+                    <div class="form-group-custom">
+                        <label for="cboTipoDoc">Tipo de Documento</label>
+                        <select id="cboTipoDoc" name="cboTipoDoc" class="form-control-custom">
+                            <option value="" disabled selected>Selecciona el documento</option>
+                            <option value="1">Cédula de Ciudadanía</option>
+                            <option value="2">Cédula de Extranjería</option>
+                            <option value="3">Pasaporte</option>
+                        </select>
+                        <div id="errorTipoDoc" class="error-message"></div>
+                    </div>
+                    <div class="form-group-custom">
+                        <label for="txtIdentificacion">Número de Documento</label>
+                        <input type="text" id="txtIdentificacion" name="txtIdentificacion" class="form-control-custom" placeholder="Ej. 1098765432" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                        <div id="errorIdentificacion" class="error-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-row-double">
+                    <div class="form-group-custom">
+                        <label for="txtTelefono">Teléfono</label>
+                        <input type="tel" id="txtTelefono" name="txtTelefono" class="form-control-custom" placeholder="Ej. 3158889900" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                        <div id="errorTelefono" class="error-message"></div>
+                    </div>
+                    <div class="form-group-custom">
+                        <label for="txtFechaNacimiento">Fecha de Nacimiento</label>
+                        <input type="date" id="txtFechaNacimiento" name="txtFechaNacimiento" class="form-control-custom">
+                        <div id="errorFechaNacimiento" class="error-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="txtCorreo">Correo electrónico</label>
+                    <input type="email" id="txtCorreo" name="txtCorreo" class="form-control-custom" placeholder="ejemplo@gmail.com">
+                    <div id="errorCorreo" class="error-message"></div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="txtClave">Contraseña</label>
+                    <div style="position: relative;">
+                        <input type="password" id="txtClave" name="txtClave" class="form-control-custom" placeholder="Mínimo 8 caracteres" minlength="8" maxlength="72" autocomplete="new-password" style="padding-right: 40px;">
+                        <button type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility()" aria-label="Mostrar contraseña" title="Mostrar contraseña" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); width:32px; height:32px; border:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">
+                            <svg id="passwordEyeIcon" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                        </button>
+                    </div>
+                    <div id="errorClave" class="error-message"></div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label class="checkbox-label-custom">
+                        <input type="checkbox" id="chkAutorizacion" name="chkAutorizacion" value="SI" checked>
+                        <span>Acepto la autorización y <a href="javascript:void(0);" onclick="openPrivacyModal(event)">tratamiento de datos personales</a>.</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="btnCrearCuenta" class="btn-submit-account">CREAR CUENTA</button>
+            </form>
+
+            <p class="login-redirect-text">
+                ¿Ya tienes cuenta? <a th:href="@{/login}" href="/login">Inicia sesión</a>
+            </p>
+        </div>
+
+    </main>
+
+    <div id="privacyModal" class="modal-overlay">
+        <div class="modal-content-box">
+            <h3>Política de Privacidad y Tratamiento de Datos Personales — Habeas Data</h3>
+            <p>Beauty Boost trata los datos personales suministrados por el usuario para gestionar la cuenta, procesar pedidos, coordinar entregas, atender solicitudes, administrar favoritos y mejorar la experiencia de uso de la plataforma.</p>
+            <p>El tratamiento se realiza de acuerdo con la normativa colombiana aplicable en materia de protección de datos personales, incluyendo la Ley 1581 de 2012 y sus normas reglamentarias. El titular puede conocer, actualizar, rectificar o solicitar la supresión de sus datos cuando legalmente corresponda, así como consultar el uso dado a su información y presentar las solicitudes relacionadas con sus derechos de Habeas Data.</p>
+            <p>La información personal no debe compartirse con terceros ajenos al servicio salvo cuando sea necesario para cumplir la finalidad autorizada, una obligación legal o una orden de autoridad competente. Beauty Boost adopta medidas razonables de seguridad para proteger la información contra acceso, modificación, pérdida o uso no autorizado.</p>
+            <button type="button" class="modal-close-btn" onclick="closePrivacyModal()">Entendido</button>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const inputFecha = document.getElementById("txtFechaNacimiento");
+            if (inputFecha) {
+                const hoy = new Date();
+                const max18 = new Date(hoy.getFullYear() - 18, hoy.getMonth(), hoy.getDate());
+                const yyyy = max18.getFullYear();
+                const mm = String(max18.getMonth() + 1).padStart(2, "0");
+                const dd = String(max18.getDate()).padStart(2, "0");
+                inputFecha.setAttribute("max", `${yyyy}-${mm}-${dd}`);
+            }
+        })();
+
+        function togglePasswordVisibility() {
+            const inputClave = document.getElementById("txtClave");
+            const iconBtn = document.getElementById("togglePasswordBtn");
+            const icon = document.getElementById("passwordEyeIcon");
+            const visible = inputClave.type === "password";
+
+            inputClave.type = visible ? "text" : "password";
+            iconBtn.title = visible ? "Ocultar contraseña" : "Mostrar contraseña";
+            iconBtn.setAttribute("aria-label", visible ? "Ocultar contraseña" : "Mostrar contraseña");
+            icon.innerHTML = visible
+                ? '<path d="M2.2 12s3.5-6 9.8-6 9.8 6 9.8 6-3.5 6-9.8 6-9.8-6-9.8-6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.7" fill="currentColor"/>'
+                : '<path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.2 12s3.5-6 9.8-6c2 0 3.7.6 5.1 1.5M21.8 12s-1.5 2.6-4.5 4.2c-1.5.8-3.2 1.2-5.3 1.2-6.3 0-9.8-6-9.8-6s1.4-2.4 4.2-4" fill="none" stroke="currentColor" stroke-width="1.8"/>';
+        }
+
+        function openPrivacyModal(event) {
+            event.preventDefault();
+            document.getElementById("privacyModal").style.display = "flex";
+        }
+
+        function closePrivacyModal() {
+            document.getElementById("privacyModal").style.display = "none";
+        }
+
+        function mostrarErrorRegistro(mensaje) {
+            const box = document.getElementById("registroFeedback");
+            if (!box) return;
+            box.className = "login-feedback-error";
+            box.setAttribute("role", "alert");
+            box.textContent = mensaje;
+            box.style.display = "block";
+        }
+
+        document.getElementById("registroForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            let isValid = true;
+
+            const feedback = document.getElementById("registroFeedback");
+            if (feedback) {
+                feedback.style.display = "none";
+                feedback.textContent = "";
+            }
+
+            function validateField(inputId, errorId, isEmail = false) {
+                const input = document.getElementById(inputId);
+                const error = document.getElementById(errorId);
+                error.style.display = "none";
+                error.textContent = "";
+                input.classList.remove("error-input");
+
+                const val = input.value.trim();
+                if (val === "") {
+                    error.textContent = "⚠ Completa este campo";
+                    error.style.display = "block";
+                    input.classList.add("error-input");
+                    return false;
+                } else if (isEmail && !val.includes("@")) {
+                    error.textContent = '⚠ Incluye un signo "@" en la dirección de correo electrónico';
+                    error.style.display = "block";
+                    input.classList.add("error-input");
+                    return false;
+                }
+                return true;
+            }
+
+            if (!validateField("txtNombre", "errorNombre")) isValid = false;
+            if (!validateField("txtApellido", "errorApellido")) isValid = false;
+            if (!validateField("cboTipoDoc", "errorTipoDoc")) isValid = false;
+
+            if (!validateField("txtIdentificacion", "errorIdentificacion")) isValid = false;
+            const documento = document.getElementById("txtIdentificacion");
+            const errorDocumento = document.getElementById("errorIdentificacion");
+            if (documento && documento.value.trim().length > 0 && documento.value.trim().length !== 10) {
+                errorDocumento.textContent = "⚠ El número de documento debe tener exactamente 10 dígitos";
+                errorDocumento.style.display = "block";
+                documento.classList.add("error-input");
+                isValid = false;
+            }
+
+            if (!validateField("txtTelefono", "errorTelefono")) isValid = false;
+            const telefono = document.getElementById("txtTelefono");
+            const errorTelefono = document.getElementById("errorTelefono");
+            if (telefono && telefono.value.trim().length > 0 && telefono.value.trim().length !== 10) {
+                errorTelefono.textContent = "⚠ El número de celular debe tener exactamente 10 dígitos";
+                errorTelefono.style.display = "block";
+                telefono.classList.add("error-input");
+                isValid = false;
+            }
+
+            const inputFecha = document.getElementById("txtFechaNacimiento");
+            const errorFecha = document.getElementById("errorFechaNacimiento");
+            errorFecha.style.display = "none";
+            errorFecha.textContent = "";
+            inputFecha.classList.remove("error-input");
+
+            if (inputFecha.value.trim() === "") {
+                errorFecha.textContent = "⚠ Completa este campo";
+                errorFecha.style.display = "block";
+                inputFecha.classList.add("error-input");
+                isValid = false;
+            } else {
+                const partes = inputFecha.value.split("-");
+                const fechaNac = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+                const hoy = new Date();
+                let edad = hoy.getFullYear() - fechaNac.getFullYear();
+                const m = hoy.getMonth() - fechaNac.getMonth();
+                if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+                    edad--;
+                }
+                if (edad < 18) {
+                    errorFecha.textContent = "⚠ Debes ser mayor de 18 años para registrarte";
+                    errorFecha.style.display = "block";
+                    inputFecha.classList.add("error-input");
+                    isValid = false;
+                }
+            }
+
+            if (!validateField("txtCorreo", "errorCorreo", true)) isValid = false;
+
+            const inputClave = document.getElementById("txtClave");
+            const errorClave = document.getElementById("errorClave");
+            errorClave.style.display = "none";
+            errorClave.textContent = "";
+            inputClave.classList.remove("error-input");
+            const clave = inputClave.value.trim();
+            if (clave === "") {
+                errorClave.textContent = "⚠ Completa este campo";
+                errorClave.style.display = "block";
+                inputClave.classList.add("error-input");
+                isValid = false;
+            } else if (clave.length < 8) {
+                errorClave.textContent = "⚠ La contraseña debe tener mínimo 8 caracteres";
+                errorClave.style.display = "block";
+                inputClave.classList.add("error-input");
+                isValid = false;
+            }
+
+            const chkAuth = document.getElementById("chkAutorizacion");
+            if (chkAuth && !chkAuth.checked) {
+                mostrarErrorRegistro("Debes aceptar la autorización y tratamiento de datos personales.");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            const btn = document.getElementById("btnCrearCuenta");
+            btn.disabled = true;
+            const textoOriginal = btn.textContent;
+            btn.textContent = "CREANDO CUENTA...";
+
+            try {
+                const payload = {
+                    nombre: document.getElementById("txtNombre").value.trim(),
+                    apellido: document.getElementById("txtApellido").value.trim(),
+                    tipoDocumentoId: Number(document.getElementById("cboTipoDoc").value),
+                    numeroIdentificacion: documento.value.trim(),
+                    telefono: telefono.value.trim(),
+                    fechaNacimiento: inputFecha.value,
+                    correo: document.getElementById("txtCorreo").value.trim(),
+                    clave: clave,
+                    autorizacionDatos: chkAuth && chkAuth.checked ? "SI" : "NO"
+                };
+
+                const res = await fetch("/api/usuario/registro", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.status === "success") {
+                    window.location.href = data.redirect || "/login?registro=ok";
+                } else {
+                    mostrarErrorRegistro(data.message || "Error al guardar en base de datos. Verifique que la cédula o correo no estén registrados previamente.");
+                    btn.disabled = false;
+                    btn.textContent = textoOriginal;
+                }
+            } catch (err) {
+                mostrarErrorRegistro("Error de conexión al intentar crear la cuenta.");
+                btn.disabled = false;
+                btn.textContent = textoOriginal;
+            }
+        });
+    </script>
+</body>
+</html>

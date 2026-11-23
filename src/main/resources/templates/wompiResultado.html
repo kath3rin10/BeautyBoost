@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Boost - Resultado del pago</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="catalog-page checkout-body">
+<div class="checkout-confirmation-view checkout-center-view">
+    <div class="checkout-success-icon" th:text="${estado == 'Pagado' ? '✓' : (estado == 'Rechazado' ? '✕' : '…')}">✓</div>
+    <h1 class="checkout-success-title" th:text="${estado == 'Pagado' ? '¡Gracias por tu compra!' : 'Estado de tu pago'}">¡Gracias por tu compra!</h1>
+    <p class="checkout-success-desc" th:text="${mensaje}">Mensaje de estado del pago</p>
+    <p>
+        <a th:href="@{/productos}" class="btn-primary-brown">Seguir comprando</a>
+    </p>
+</div>
+
+<!-- Script condicional si el pago fue aprobado y el usuario existe -->
+<script th:if="${estado == 'Pagado' && usuarioLogueado != null}" th:inline="javascript">
+    /*<![CDATA[*/
+    // El pago fue aprobado: se vacia el carrito guardado en el navegador.
+    localStorage.removeItem('beautyBoostCart_' + /*[[${usuarioLogueado.correo}]]*/ '');
+    /*]]>*/
+</script>
+</body>
+</html>
+

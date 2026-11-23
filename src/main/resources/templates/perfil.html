@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Boost - Mi Perfil</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="profile-page"
+      th:data-context-path="@{/}"
+      th:data-cloudinary-base="${cloudinaryBaseUrl}"
+      th:data-user-email="${usuarioLogueado.correo}"
+      data-logged-in="true">
+
+<header class="custom-header profile-store-header">
+    <div class="header-top-row">
+        <div class="header-logo-circle">
+            <img th:src="@{${cloudinaryBaseUrl} + 'logo.png'}" alt="Logo Beauty Boost">
+        </div>
+        <div class="app-name-oval"><h1>BEAUTY BOOST</h1></div>
+        <div class="header-right-space"></div>
+    </div>
+</header>
+<nav class="horizontal-navbar profile-store-navbar">
+    <div class="navbar-categories">
+        <a th:href="@{/productos}" class="navbar-link">Todo</a>
+        <a th:href="@{/productos}" class="navbar-link">Maquillaje</a>
+        <a th:href="@{/productos}" class="navbar-link">Cuidado Facial</a>
+        <a th:href="@{/productos}" class="navbar-link">Brochas</a>
+        <a th:href="@{/productos}" class="navbar-link">Novedades</a>
+        <a th:href="@{/productos}" class="navbar-link">Más Vendidos</a>
+    </div>
+    <div class="navbar-right">
+        <a th:href="@{/PerfilServlet}" class="header-user navbar-user-name" title="Mi Perfil">
+            <span class="header-user-icon">👤</span><strong th:text="${usuarioLogueado.nombre}">Usuario</strong>
+        </a>
+        <a th:href="@{/carrito}" class="navbar-icon-btn cart-nav-button" title="Carrito">🛒</a>
+    </div>
+</nav>
+
+<main class="profile-container">
+
+    <div th:if="${mensajeExito != null}" class="alert-box alert-success" th:text="${mensajeExito}"></div>
+    <div th:if="${mensajeError != null}" class="alert-box alert-danger" th:text="${mensajeError}"></div>
+
+    <div class="breadcrumb">
+        <a th:href="@{/productos}">🏠 Inicio (Catálogo)</a>
+        <span class="breadcrumb-separator">&gt;</span>
+        <span id="lblBreadcrumbCurrent" class="breadcrumb-current">Información Personal</span>
+    </div>
+
+    <section class="hero-profile-card">
+        <div class="profile-info-left">
+            <img th:src="@{${cloudinaryBaseUrl} + 'logo.png'}" alt="Avatar" class="avatar-img">
+            <div>
+                <h2 class="profile-user-title">
+                    <span th:text="${usuarioLogueado.nombre}">Nombre</span> <span th:text="${usuarioLogueado.apellido}">Apellido</span>
+                    <span class="badge-vip" th:text="${tipoUsuarioNombre != null ? tipoUsuarioNombre : 'CLIENTE'}">CLIENTE</span>
+                </h2>
+                <div class="profile-meta-row">
+                    <span>✉ <span th:text="${usuarioLogueado.correo}">correo@email.com</span></span>
+                    <span>📱 +57 <span th:text="${usuarioLogueado.telefono}">3000000000</span></span>
+                    <span>🆔 Doc: <span th:text="${usuarioLogueado.numeroIdentificacion}">123456</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-group">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalPedidos != null ? totalPedidos : 0}">0</span>
+                <span class="stat-label">Pedidos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalResenas != null ? totalResenas : 0}">0</span>
+                <span class="stat-label">Reseñas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalDirecciones != null ? totalDirecciones : 0}">0</span>
+                <span class="stat-label">Direcciones</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="profile-grid-layout">
+
+        <aside>
+            <div class="sidebar-card">
+                <span class="sidebar-title-label">Centro de Control</span>
+                <div class="menu-list">
+                    <button type="button" class="menu-btn active" id="btnTab1" onclick="switchTab('tab1', 'Información Personal')">
+                        <span>👤 Información Personal</span>
+                        <span>›</span>
+                    </button>
+                    <button type="button" class="menu-btn" id="btnTab2" onclick="switchTab('tab2', 'Direcciones de Envío')">
+                        <span>📍 Direcciones de Envío</span>
+                        <span class="menu-badge-count" th:text="${totalDirecciones != null ? totalDirecciones : 0}">0</span>
+                    </button>
+                    <button type="button" class="menu-btn" id="btnTab3" onclick="switchTab('tab3', 'Mis Pedidos e Historial')">
+                        <span>📦 Mis Pedidos e Historial</span>
+                        <span class="menu-badge-count" th:text="${totalPedidos != null ? totalPedidos : 0}">0</span>
+                    </button>
+                    <button type="button" class="menu-btn" id="btnTab4" onclick="switchTab('tab4', 'Mis Reseñas y Opiniones')">
+                        <span>✍️ Mis Reseñas y Opiniones</span>
+                        <span class="menu-badge-count" th:text="${totalResenas != null ? totalResenas : 0}">0</span>
+                    </button>
+                    <button type="button" class="menu-btn" id="btnTab5" onclick="switchTab('tab5', 'Seguridad y Privacidad')">
+                        <span>🛡️ Seguridad y Privacidad</span>
+                        <span>›</span>
+                    </button>
+                    <button type="button" class="menu-btn" id="btnTab6" onclick="switchTab('tab6', 'Mis Favoritos')">
+                        <span>♥ Mis Favoritos</span>
+                        <span class="menu-badge-count" id="favoritesCountBadge" th:text="${totalFavoritos != null ? totalFavoritos : 0}">0</span>
+                    </button>
+                </div>
+
+                <a th:href="@{/logout}" class="logout-link">
+                    <button class="btn-logout" type="button">🚪 Cerrar Sesión</button>
+                </a>
+            </div>
+        </aside>
+
+        <section class="content-panel">
+
+            <!-- PESTAÑA 1 -->
+            <div class="tab-content active" id="tab1">
+                <div class="panel-header-block">
+                    <h3>Información Personal</h3>
+                    <p>Actualiza tus datos registrados en el sistema.</p>
+                </div>
+
+                <form th:action="@{/PerfilServlet}" method="POST">
+                    <input type="hidden" name="action" value="actualizarDatos">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Tipo de Documento</label>
+                            <select class="form-control" name="tipoDocumento" disabled>
+                                <option th:each="td : ${listaTiposDoc}"
+                                        th:value="${td.id}"
+                                        th:text="${td.descripcion}"
+                                        th:selected="${td.descripcion == tipoDocNombre}"></option>
+                            </select>
+                            <input type="hidden" name="tipoDocumento" th:value="${idTipoDocActual}">
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Identificación</label>
+                            <input type="text" class="form-control" name="numeroIdentificacion" th:value="${usuarioLogueado.numeroIdentificacion}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombres</label>
+                            <input type="text" class="form-control" name="nombre" th:value="${usuarioLogueado.nombre}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos</label>
+                            <input type="text" class="form-control" name="apellido" th:value="${usuarioLogueado.apellido}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono móvil</label>
+                            <input type="text" class="form-control" name="telefono" th:value="${usuarioLogueado.telefono}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <input type="email" class="form-control" name="correo" th:value="${usuarioLogueado.correo}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" name="fechaNacimiento" th:value="${fechaNacimiento != null ? fechaNacimiento : ''}">
+                        </div>
+                        <div class="form-submit-container">
+                            <button type="submit" class="btn-action-primary">Guardar Cambios</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- GESTIÓN DE DATOS SENSIBLES -->
+                <div style="margin-top: 25px; padding: 18px; background: #fff8f6; border: 1px solid #e8d5d0; border-radius: 8px;">
+                    <h4 style="margin-bottom: 6px; color: #5a3e36; font-size: 15px;">🔒 Gestión de Datos Sensibles</h4>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 12px;">¿Necesitas modificar tu Tipo de Documento, Número de Identificación o Fecha de Nacimiento? Envía una solicitud formal al equipo de soporte.</p>
+                    <button type="button" onclick="abrirModalSensible()" style="background-color: #7d5a50; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;">Solicitar Modificación de Datos Sensibles</button>
+                </div>
+
+                <!-- MODAL FORMULARIO DE SOLICITUD -->
+                <div id="customModalSensible" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); justify-content: center; align-items: center; z-index: 9999;">
+                    <div style="background: #ffffff; padding: 30px; border-radius: 12px; max-width: 450px; width: 90%; text-align: left; box-shadow: 0 10px 30px rgba(90, 62, 54, 0.25); border: 1px solid #e8d5d0; font-family: inherit;">
+                        <div style="text-align: center; font-size: 28px; margin-bottom: 5px;">🔒</div>
+                        <h3 style="color: #5a3e36; margin-bottom: 8px; font-size: 17px; text-align: center;">Solicitud de Modificación de Datos Sensibles</h3>
+                        <p style="color: #666; font-size: 13px; line-height: 1.4; margin-bottom: 15px; text-align: center;">Indica el motivo por el cual necesitas modificar tus datos sensibles:</p>
+                        <form th:action="@{/PerfilServlet}" method="POST">
+                            <input type="hidden" name="action" value="solicitarDatosSensibles">
+                            <div style="margin-bottom: 15px;">
+                                <textarea name="motivo" rows="4" placeholder="Escribe aquí detalladamente el motivo..." required style="width: 100%; padding: 10px; border: 1px solid #e8d5d0; border-radius: 6px; font-size: 13px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" onclick="cerrarModalSensible()" style="background-color: #e8d5d0; color: #5a3e36; border: none; padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;">Cancelar</button>
+                                <button type="submit" style="background-color: #7d5a50; color: white; border: none; padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;">Enviar Solicitud</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 2: DIRECCIONES -->
+            <div class="tab-content" id="tab2">
+                <div class="panel-header-block">
+                    <h3>Direcciones de Envío</h3>
+                    <p>Gestión de direcciones registradas.</p>
+                </div>
+
+                <div class="grid-direcciones">
+                    <div class="card-direccion" th:each="dir : ${listaDirecciones}">
+                        <div class="address-card-head">
+                            <h4 th:text="${usuarioLogueado.nombre + ' ' + usuarioLogueado.apellido}">Nombre</h4>
+                            <span class="address-badge">Envío</span>
+                        </div>
+                        <p>
+                            <span th:text="${dir.direccion}"></span><br>
+                            <span th:text="${dir.ciudad}"></span> • CP: <span th:text="${dir.cp}"></span><br>
+                            📞 +57 <span th:text="${usuarioLogueado.telefono}"></span>
+                        </p>
+                        <form th:action="@{/PerfilServlet}" method="POST" class="address-delete-form" onsubmit="return confirm('¿Eliminar esta dirección de envío?');">
+                            <input type="hidden" name="action" value="eliminarDireccion">
+                            <input type="hidden" name="idDireccion" th:value="${dir.id}">
+                            <button type="submit" class="btn-address-delete">🗑 Eliminar dirección</button>
+                        </form>
+                    </div>
+                    <div th:if="${listaDirecciones == null || listaDirecciones.isEmpty()}" class="text-muted-msg">No tienes direcciones registradas.</div>
+                </div>
+
+                <div class="seccion-agregar-dir">
+                    <h4>+ Agregar Nueva Dirección</h4>
+                    <form th:action="@{/PerfilServlet}" method="POST">
+                        <input type="hidden" name="action" value="agregarDireccion">
+                        <div class="form-group">
+                            <label>Dirección de Envío</label>
+                            <input type="text" class="form-control" name="direccion_envio" placeholder="Ej: Calle 100 # 15-20" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ciudad</label>
+                            <select class="form-control" name="id_ciudad" required>
+                                <option value="" disabled selected>-- Selecciona una ciudad --</option>
+                                <option th:each="c : ${listaCiudades}" th:value="${c.id}" th:text="${c.ciudad + ' (CP: ' + c.cp + ')'}"></option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-action-primary margin-top-sm">Guardar Dirección</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 3: PEDIDOS -->
+            <div class="tab-content" id="tab3">
+                <div class="panel-header-block">
+                    <h3>Mis Pedidos e Historial</h3>
+                    <p>Revisa tus compras y deja una reseña cuando el pedido haya sido entregado.</p>
+                </div>
+
+                <div class="orders-list" th:if="${listaPedidos != null && !listaPedidos.isEmpty()}">
+                    <article class="order-history-card" th:each="ped : ${listaPedidos}" th:data-pedido-id="${ped.idPedido}">
+                        <div class="order-history-head">
+                            <div class="order-history-id">
+                                <span class="order-history-kicker">BEAUTY BOOST · PEDIDO</span>
+                                <h4 th:text="'#' + ${ped.numPedido}">#000</h4>
+                                <span th:text="${ped.fecha}">Fecha</span>
+                            </div>
+                            <div class="order-history-status" th:classappend="${ped.estado != null && ped.estado.toLowerCase().contains('entregado') ? 'delivered' : ''}">
+                                <span class="status-dot"></span>
+                                <span th:text="${(ped.estado != null && ped.estado.toLowerCase().contains('entregado') ? '✓ ' : (ped.estado != null && ped.estado.toLowerCase().contains('camino') ? '🚚 ' : '📦 ')) + (ped.estado != null ? ped.estado : 'Pendiente')}"></span>
+                            </div>
+                        </div>
+
+                        <div class="order-history-products">
+                            <div class="order-product-row" th:each="prod : ${ped.productos}">
+                                <div class="order-product-main">
+                                    <div class="order-product-image">
+                                        <img th:src="${#strings.isEmpty(prod.imagen)} ? @{/Vista/img/product-placeholder.svg} : ${cloudinaryBaseUrl + prod.imagen}" th:alt="${prod.nombre}">
+                                    </div>
+                                    <div>
+                                        <strong th:text="${prod.nombre}">Producto</strong>
+                                        <span th:text="'Cantidad: ' + ${prod.cantidad}">Cantidad: 1</span>
+                                    </div>
+                                </div>
+                                <div class="order-product-side">
+                                    <strong th:text="'$ ' + ${(prod instanceof T(java.util.Map) ? prod['subtotal'] : prod.subtotal) != null ? #numbers.formatDecimal((prod instanceof T(java.util.Map) ? prod['subtotal'] : prod.subtotal), 0, 'POINT', 0, 'POINT') : '0'}">$ 0</strong>
+                                    <button type="button" class="review-open-btn"
+                                            th:if="${prod.idProducto != null && prod.idProducto > 0}"
+                                            th:attr="onclick=|abrirModalResena(${ped.idPedido}, ${prod.idProducto}, '${prod.nombre}')|">
+                                        ★ Dejar Reseña
+                                    </button>
+                                    <button type="button" class="order-add-cart-btn" th:attr="onclick=|agregarProductoPedido(${prod.idProducto}, ${prod.cantidad})|">🛒 Agregar al carrito</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="order-history-foot">
+                            <span>Total del pedido</span>
+                            <strong th:text="'$ ' + ${(ped instanceof T(java.util.Map) ? ped['total'] : ped.total) != null ? #numbers.formatDecimal((ped instanceof T(java.util.Map) ? ped['total'] : ped.total), 0, 'POINT', 0, 'POINT') : '0'}">$ 0</strong>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="profile-empty-state" th:if="${listaPedidos == null || listaPedidos.isEmpty()}">
+                    <div class="profile-empty-icon">🛍</div>
+                    <h4>Aún no tienes pedidos</h4>
+                    <p>Cuando realices una compra, aparecerá aquí tu historial.</p>
+                    <a th:href="@{/productos}">Explorar la tienda →</a>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 4: RESEÑAS -->
+            <div class="tab-content" id="tab4">
+                <div class="panel-header-block">
+                    <h3>Mis Reseñas y Opiniones</h3>
+                    <p>Tus opiniones registradas.</p>
+                </div>
+
+                <div th:if="${listaResenas != null && !listaResenas.isEmpty()}">
+                    <article class="my-review-card" th:each="res : ${listaResenas}">
+                        <div class="my-review-image">
+                            <img th:src="${#strings.isEmpty(res.productoImagen)} ? @{/Vista/img/product-placeholder.svg} : ${cloudinaryBaseUrl + res.productoImagen}" alt="Producto reseñado">
+                        </div>
+                        <div class="my-review-content">
+                            <div class="my-review-top">
+                                <div>
+                                    <span class="review-kicker">TU OPINIÓN</span>
+                                    <h4 th:text="${res.productoNombre != null ? res.productoNombre : 'Producto'}">Producto</h4>
+                                </div>
+                                <time th:text="${res.fecha}">Fecha</time>
+                            </div>
+                            <div class="review-stars-display" th:attr="aria-label=${res.calificacion + ' de 5 estrellas'}">
+                                <span th:each="s : ${#numbers.sequence(1, 5)}" th:class="${res.calificacion != null && s <= res.calificacion} ? 'filled' : ''">★</span>
+                            </div>
+                            <p th:text="${res.observacion}">Comentario</p>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="profile-empty-state" th:if="${listaResenas == null || listaResenas.isEmpty()}">
+                    <div class="profile-empty-icon">✍</div>
+                    <h4>Todavía no has publicado reseñas</h4>
+                    <p>Cuando un pedido sea entregado podrás valorar cada producto desde tu historial.</p>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 5: SEGURIDAD Y PRIVACIDAD -->
+            <div class="tab-content" id="tab5">
+                <div class="panel-header-block">
+                    <h3>Seguridad y Privacidad</h3>
+                    <p>Aquí encontrarás los términos, condiciones y tu autorización para el tratamiento de datos personales.</p>
+                </div>
+
+                <section class="terms-privacy-card">
+                    <div class="terms-privacy-icon">📜</div>
+                    <div class="terms-privacy-copy">
+                        <span class="privacy-kicker">TÉRMINOS Y CONDICIONES</span>
+                        <h4>Tratamiento de datos personales</h4>
+                        <p>Beauty Boost utilizará tus datos para administrar tu cuenta, procesar pedidos, gestionar entregas, atender solicitudes y mantener la seguridad de la plataforma.</p>
+                        <details class="terms-details" open>
+                            <summary>Leer términos y condiciones</summary>
+                            <div class="terms-details-body">
+                                <p><strong>1. Cuenta:</strong> la información registrada debe ser correcta y mantenerse actualizada.</p>
+                                <p><strong>2. Pedidos:</strong> los datos de contacto y dirección se usan para preparar y entregar tus compras.</p>
+                                <p><strong>3. Privacidad:</strong> la información personal no debe utilizarse para finalidades diferentes a las informadas sin la autorización correspondiente.</p>
+                                <p><strong>4. Autorización:</strong> puedes cambiar tu decisión desde este apartado cuando quieras.</p>
+                            </div>
+                        </details>
+                    </div>
+                </section>
+
+                <div class="privacy-section profile-privacy-card">
+                    <div class="privacy-section-heading">
+                        <div class="privacy-icon">🛡️</div>
+                        <div><h4>Autorización</h4><p>Selecciona la casilla para aceptar los términos y el tratamiento de tus datos personales.</p></div>
+                    </div>
+                    <form th:action="@{/PerfilServlet}" method="POST" class="privacy-consent-form">
+                        <input type="hidden" name="action" value="actualizarAutorizacion">
+                        <label class="privacy-checkbox-label">
+                            <input type="checkbox" name="autorizacionDatos" value="true"
+                                   th:checked="${autorizacionDatos != null && (#strings.equalsIgnoreCase(autorizacionDatos.toString(), 'SI') || #strings.equals(autorizacionDatos.toString(), '1') || #strings.equalsIgnoreCase(autorizacionDatos.toString(), 'true'))}">
+                            <span><strong>Acepto los términos y el tratamiento de mis datos personales</strong><small>Puedes cambiar esta autorización cuando quieras.</small></span>
+                        </label>
+                        <button type="submit" class="btn-action-primary privacy-save-btn">Guardar autorización</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 6: FAVORITOS -->
+            <div class="tab-content" id="tab6">
+                <div class="panel-header-block">
+                    <h3>Mis Favoritos</h3>
+                    <p>Tu lista de productos guardados para comprar más tarde.</p>
+                </div>
+                <div id="favoritesProfileGrid" class="favorites-profile-grid" th:if="${listaFavoritos != null && !listaFavoritos.isEmpty()}">
+                    <article class="favorite-profile-card" th:each="fav : ${listaFavoritos}" th:data-favorite-profile-id="${fav.idProducto}">
+                        <button type="button" class="favorite-remove-btn" th:attr="onclick=|quitarFavoritoPerfil(${fav.idProducto})|" title="Quitar de favoritos">♥</button>
+                        <div class="favorite-profile-image">
+                            <img th:src="${#strings.isEmpty(fav.imagenUrl)} ? @{/Vista/img/default.jpg} : ${fav.imagenUrl}" th:alt="${fav.nombreProd}">
+                        </div>
+                        <div class="favorite-profile-info">
+                            <span>BEAUTY BOOST</span>
+                            <h4 th:text="${fav.nombreProd}">Producto</h4>
+                            <strong th:text="'$ ' + ${fav.precio != null ? #numbers.formatDecimal(fav.precio, 0, 'POINT', 0, 'POINT') : '0'}">$ 0</strong>
+                            <button type="button" class="btn-action-primary" th:attr="onclick=|abrirModalDetalle(${fav.idProducto})|">Ver producto</button>
+                        </div>
+                    </article>
+                </div>
+                <div class="favorites-empty" th:if="${listaFavoritos == null || listaFavoritos.isEmpty()}">
+                    <div>♡</div>
+                    <h4>Aún no tienes favoritos</h4>
+                    <p>Marca el corazón de un producto y aparecerá aquí.</p>
+                    <a th:href="@{/productos}" class="btn-action-primary">Explorar productos</a>
+                </div>
+            </div>
+
+        </section>
+    </div>
+</main>
+
+<!-- MODAL DE RESEÑA -->
+<div id="reviewModal" class="review-modal" aria-hidden="true">
+    <div class="review-modal-card">
+        <button type="button" class="review-modal-close" onclick="cerrarModalResena()" aria-label="Cerrar">×</button>
+        <span class="review-modal-kicker">BEAUTY BOOST · TU EXPERIENCIA</span>
+        <h3>Cuéntanos qué te pareció</h3>
+        <p class="review-modal-product" id="reviewProductName">Producto</p>
+
+        <form th:action="@{/PerfilServlet}" method="POST" id="reviewForm">
+            <input type="hidden" name="action" value="publicarResena">
+            <input type="hidden" name="pedidoId" id="reviewPedidoId">
+            <input type="hidden" name="productoId" id="reviewProductoId">
+
+            <div class="star-picker" role="radiogroup" aria-label="Calificación">
+                <input type="radio" id="star5" name="calificacion" value="5"><label for="star5" title="5 estrellas">★</label>
+                <input type="radio" id="star4" name="calificacion" value="4"><label for="star4" title="4 estrellas">★</label>
+                <input type="radio" id="star3" name="calificacion" value="3"><label for="star3" title="3 estrellas">★</label>
+                <input type="radio" id="star2" name="calificacion" value="2"><label for="star2" title="2 estrellas">★</label>
+                <input type="radio" id="star1" name="calificacion" value="1"><label for="star1" title="1 estrella">★</label>
+            </div>
+            <div class="star-picker-help">Selecciona de 1 a 5 estrellas</div>
+
+            <label class="review-field-label" for="reviewComment">Tu comentario</label>
+            <textarea id="reviewComment" name="observacion" maxlength="255" rows="5"
+                      placeholder="Cuéntanos sobre la calidad, textura, empaque o cómo te fue con el producto..." required></textarea>
+            <div class="review-character-count"><span id="reviewChars">0</span>/255</div>
+
+            <button type="submit" class="review-submit-btn">Publicar Reseña <span>→</span></button>
+        </form>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script th:inline="javascript">
+    const userEmail = /*[[${usuarioLogueado.correo}]]*/ '';
+    const contextPath = /*[[@{/}]]*/ '';
+</script>
+<script th:src="@{/Vista/js/beauty-boost.js}"></script>
+<script>
+    function switchTab(tabId, titleText) {
+        document.querySelectorAll('.tab-content').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.menu-btn').forEach(function(btn) {
+            btn.classList.remove('active');
+        });
+
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
+
+        const idx = String(tabId || '').replace('tab', '');
+        const targetBtn = document.getElementById('btnTab' + idx);
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+        }
+
+        const breadcrumb = document.getElementById('lblBreadcrumbCurrent');
+        if (breadcrumb && titleText) {
+            breadcrumb.textContent = titleText;
+        }
+    }
+
+    function abrirModalSensible() {
+        const modal = document.getElementById('customModalSensible');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function cerrarModalSensible() {
+        const modal = document.getElementById('customModalSensible');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function abrirModalResena(pedidoId, productoId, nombreProducto) {
+        const modal = document.getElementById('reviewModal');
+        if (!modal) return;
+        document.getElementById('reviewPedidoId').value = pedidoId;
+        document.getElementById('reviewProductoId').value = productoId;
+        document.getElementById('reviewProductName').textContent = nombreProducto || 'Producto';
+        document.getElementById('reviewComment').value = '';
+        document.getElementById('reviewChars').textContent = '0';
+        document.querySelectorAll('#reviewForm input[name="calificacion"]').forEach(r => r.checked = false);
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    }
+
+    function cerrarModalResena() {
+        const modal = document.getElementById('reviewModal');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+    }
+
+    async function quitarFavoritoPerfil(id) {
+        try {
+            const base = (contextPath || '').replace(/\/$/, '');
+            const r = await fetch(base + '/PerfilServlet?action=toggleFavorito&productoId=' + encodeURIComponent(id), {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const d = await r.json();
+            if (!r.ok || !d.ok) throw new Error(d.message || 'No fue posible quitar el favorito.');
+            const card = document.querySelector('.favorite-profile-card[data-favorite-profile-id="' + id + '"]');
+            if (card) card.remove();
+            const badge = document.getElementById('favoritesCountBadge');
+            if (badge) badge.textContent = String(d.total || 0);
+            if (!(d.total > 0)) {
+                const box = document.getElementById('favoritesProfileGrid');
+                if (box) {
+                    box.innerHTML = '<div class="favorites-empty"><div>♡</div><h4>Aún no tienes favoritos</h4><p>Marca el corazón de un producto y aparecerá aquí.</p><a href="' + base + '/productos" class="btn-action-primary">Explorar productos</a></div>';
+                }
+            }
+        } catch (e) {
+            alert(e.message || 'No fue posible actualizar favoritos.');
+        }
+    }
+
+    async function agregarProductoPedido(id, cantidad, nombre, precio, imagen) {
+        try {
+            const base = (contextPath || '').replace(/\/$/, '');
+            const q = Math.max(1, Number(cantidad) || 1);
+            const key = 'beautyBoostCart_' + (userEmail || '');
+            const response = await fetch(base + '/ProductoServlet?action=productoInfo&id=' + encodeURIComponent(id), { credentials: 'same-origin' });
+            const product = await response.json();
+            if (!response.ok || product.status !== 'success') throw new Error('No fue posible cargar la información del producto.');
+            const stockResponse = await fetch(base + '/ProductoServlet?action=validarStock&id=' + encodeURIComponent(id) + '&cantidad=' + encodeURIComponent(q), { credentials: 'same-origin' });
+            const stock = await stockResponse.json();
+            if (stock.status !== 'success') { alert(stock.message || 'No hay stock disponible.'); return; }
+            let cart = [];
+            try { cart = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) {}
+            const idx = cart.findIndex(x => Number(x.id) === Number(id));
+            const imageValue = product.imagen || imagen || '';
+            if (idx >= 0) {
+                cart[idx].cantidad = (Number(cart[idx].cantidad) || 0) + q;
+                cart[idx].imagen = imageValue;
+                cart[idx].nombre = product.nombre || nombre || cart[idx].nombre;
+                cart[idx].precio = Number(product.precio) || Number(precio) || cart[idx].precio;
+            } else {
+                cart.push({ id: Number(id), nombre: product.nombre || nombre || 'Producto', precio: Number(product.precio) || Number(precio) || 0, imagen: imageValue, cantidad: q });
+            }
+            localStorage.setItem(key, JSON.stringify(cart));
+            if (typeof actualizarContadorCarrito === 'function') actualizarContadorCarrito();
+            const toast = document.createElement('div');
+            toast.className = 'bb-toast show';
+            toast.textContent = '✓ Producto agregado al carrito';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2200);
+        } catch (e) {
+            alert(e.message || 'No fue posible agregar el producto al carrito.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const comment = document.getElementById('reviewComment');
+        if (comment) {
+            comment.addEventListener('input', function () {
+                document.getElementById('reviewChars').textContent = this.value.length;
+            });
+        }
+        const modal = document.getElementById('reviewModal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) cerrarModalResena();
+            });
+        }
+    });
+</script>
+</body>
+</html>

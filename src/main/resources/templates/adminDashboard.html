@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Beauty Boost | Dashboard Administrativo</title>
+    <th:block th:replace="~{admin/includes/head :: head}"></th:block>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/style.css}">`n</head>
+<body class="bb-admin-body">
+
+<aside th:replace="~{admin/includes/sidebar :: sidebar('dashboard')}"></aside>
+
+<main class="bb-main">
+    <header th:replace="~{admin/includes/topbar :: topbar('DASHBOARD')}"></header>
+
+    <section class="bb-content">
+        <div class="admin-page-heading">
+            <div>
+                <span class="eyebrow">RESUMEN EJECUTIVO</span>
+                <h1>Panel de control general</h1>
+                <p>Monitorea ventas, pedidos recientes, inventario y actividad de clientes en tiempo real.</p>
+            </div>
+        </div>
+
+        <!-- Tarjetas de KPIs principales -->
+        <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Ingresos Totales</h3>
+                    <i class="fas fa-sack-dollar"></i>
+                </div>
+                <p id="kpiIngresos" style="font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0;">$ 0</p>
+                <small>Pedidos registrados</small>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Total Pedidos</h3>
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <p id="kpiPedidos" style="font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0;">0</p>
+                <small id="kpiPedidosPendientes">0 pendientes</small>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Productos Activos</h3>
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <p id="kpiProductos" style="font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0;">0</p>
+                <small id="kpiStockBajo">0 con stock bajo</small>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Usuarios Registrados</h3>
+                    <i class="fas fa-users"></i>
+                </div>
+                <p id="kpiUsuarios" style="font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0;">0</p>
+                <small>Clientes y administradores</small>
+            </div>
+        </div>
+
+        <!-- Sección de Analíticas / Gráficos -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Ventas por Estado de Pedido</h3>
+                </div>
+                <div style="position: relative; height: 260px;">
+                    <canvas id="chartPedidosEstado"></canvas>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h3>Inventario por Producto (Top Stock)</h3>
+                </div>
+                <div style="position: relative; height: 260px;">
+                    <canvas id="chartStockProductos"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Últimos Pedidos -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3>Últimos Pedidos Recibidos</h3>
+                <a th:href="@{/admin/pedidos}" class="btn-secondary">Ver todos</a>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>ID Pedido</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Total (COP)</th>
+                    <th>Estado</th>
+                </tr>
+                </thead>
+                <tbody id="tablaDashboardPedidos">
+                <tr>
+                    <td colspan="5" class="bb-inline-6c9cd9926d">Cargando actividad reciente...</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<th:block th:replace="~{admin/includes/footer :: footer}"></th:block>
+<script th:src="@{/js/admin-dashboard-analytics.js}"></script>
+
+<script>
+    const ESTADOS_DASH = {
+        1: "Pendiente",
+        2: "En camino",
+        3: "Entregado"
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarDatosDashboard();
+    });
+
+    async function cargarDatosDashboard() {
+        try {
+            const [resPedidos, resProductos, resUsuarios] = await Promise.allSettled([
+                fetch("/api/pedido"),
+                fetch("/api/producto"),
+                fetch("/api/usuario")
+            ]);
+
+            const pedidos = await extraerLista(resPedidos);
+            const productos = await extraerLista(resProductos);
+            const usuarios = await extraerLista(resUsuarios);
+
+            actualizarKPIs(pedidos, productos, usuarios);
+            renderizarUltimosPedidos(pedidos);
+            renderizarGraficos(pedidos, productos);
+        } catch (err) {
+            console.error("Error cargando dashboard:", err);
+        }
+    }
+
+    async function extraerLista(settledResult) {
+        if (settledResult.status !== "fulfilled" || !settledResult.value.ok) return [];
+        const data = await settledResult.value.json();
+        return Array.isArray(data) ? data : (data.content || []);
+    }
+
+    function obtenerIdEstadoDash(ped) {
+        if (typeof ped.idEstado === "number") return ped.idEstado;
+        if (typeof ped.estadosPedidoIdEstado === "number") return ped.estadosPedidoIdEstado;
+        if (ped.estadoPedido && typeof ped.estadoPedido === "object") {
+            return ped.estadoPedido.idEstado ?? ped.estadoPedido.id ?? 1;
+        }
+        return 1;
+    }
+
+    function actualizarKPIs(pedidos, productos, usuarios) {
+        const ingresosTotales = pedidos.reduce((acc, p) => acc + Number(p.total || 0), 0);
+        const pendientes = pedidos.filter(p => obtenerIdEstadoDash(p) === 1).length;
+        const stockBajo = productos.filter(prod => Number(prod.stock ?? prod.cantidad ?? 0) <= 5).length;
+
+        document.getElementById("kpiIngresos").textContent = "$ " + Math.round(ingresosTotales).toLocaleString("es-CO");
+        document.getElementById("kpiPedidos").textContent = String(pedidos.length);
+        document.getElementById("kpiPedidosPendientes").textContent = `${pendientes} pendientes`;
+        document.getElementById("kpiProductos").textContent = String(productos.length);
+        document.getElementById("kpiStockBajo").textContent = `${stockBajo} con stock bajo`;
+        document.getElementById("kpiUsuarios").textContent = String(usuarios.length);
+    }
+
+    function renderizarUltimosPedidos(pedidos) {
+        const tbody = document.getElementById("tablaDashboardPedidos");
+        if (!pedidos || pedidos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="bb-inline-6c9cd9926d">No hay pedidos recientes.</td></tr>`;
+            return;
+        }
+
+        const recientes = [...pedidos]
+            .sort((a, b) => (b.idPedido ?? b.id ?? 0) - (a.idPedido ?? a.id ?? 0))
+            .slice(0, 6);
+
+        tbody.innerHTML = recientes.map(p => {
+            const id = p.idPedido ?? p.id ?? 0;
+            const fecha = p.fecha || p.fechaPedido || "-";
+            const cliente = p.cliente || (p.usuario ? `${p.usuario.nombre || ""} ${p.usuario.apellido || ""}`.trim() : "Cliente");
+            const total = "$ " + Math.round(Number(p.total || 0)).toLocaleString("es-CO");
+            const estadoId = obtenerIdEstadoDash(p);
+            const estadoTxt = p.estado || (p.estadoPedido && p.estadoPedido.nombre) || ESTADOS_DASH[estadoId] || "Pendiente";
+
+            return `
+                <tr>
+                    <td><strong>#${id}</strong></td>
+                    <td>${fecha}</td>
+                    <td>${cliente}</td>
+                    <td>${total}</td>
+                    <td><span class="bb-inline-90038280ae">${estadoTxt}</span></td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    function renderizarGraficos(pedidos, productos) {
+        if (typeof Chart === "undefined") return;
+
+        const ctxEstado = document.getElementById("chartPedidosEstado");
+        if (ctxEstado) {
+            const conteo = [1, 2, 3].map(idEst => pedidos.filter(p => obtenerIdEstadoDash(p) === idEst).length);
+            new Chart(ctxEstado, {
+                type: "doughnut",
+                data: {
+                    labels: ["Pendiente", "En camino", "Entregado"],
+                    datasets: [{
+                        data: conteo,
+                        backgroundColor: ["#f6c23e", "#36b9cc", "#1cc88a"]
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        const ctxStock = document.getElementById("chartStockProductos");
+        if (ctxStock) {
+            const topProd = [...productos]
+                .sort((a, b) => Number(b.stock ?? 0) - Number(a.stock ?? 0))
+                .slice(0, 6);
+
+            new Chart(ctxStock, {
+                type: "bar",
+                data: {
+                    labels: topProd.map(p => p.nombre || "Producto"),
+                    datasets: [{
+                        label: "Unidades en Stock",
+                        data: topProd.map(p => Number(p.stock ?? p.cantidad ?? 0)),
+                        backgroundColor: "#d63384"
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    }
+</script>
+</body>
+</html>
+

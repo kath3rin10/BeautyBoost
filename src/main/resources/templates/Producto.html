@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Boost - Catálogo</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="catalog-page" data-cloudinary-base="https://res.cloudinary.com/rzxmfg9i/image/upload/">
+
+    <header class="custom-header">
+        <div class="header-top-row">
+            <div class="header-logo-circle">
+                <img src="https://res.cloudinary.com/rzxmfg9i/image/upload/v1789523154/logo.png" alt="Logo Beauty Boost">
+            </div>
+            <div class="app-name-oval">
+                <h1>BEAUTY BOOST</h1>
+            </div>
+            <div class="header-right-space"></div>
+        </div>
+    </header>
+
+    <nav class="horizontal-navbar">
+        <div class="navbar-categories">
+            <a href="javascript:void(0)" data-category="todo" class="navbar-link">Todo</a>
+            <a href="javascript:void(0)" data-category="maquillaje" class="navbar-link">Maquillaje</a>
+            <a href="javascript:void(0)" data-category="cuidado-facial" class="navbar-link">Cuidado Facial</a>
+            <a href="javascript:void(0)" data-category="brochas" class="navbar-link">Brochas</a>
+            <a href="javascript:void(0)" data-category="novedades" class="navbar-link">Novedades</a>
+            <a href="javascript:void(0)" data-category="mas-vendidos" class="navbar-link">Más Vendidos</a>
+        </div>
+        <div class="navbar-right">
+            <div class="input-container">
+                <input placeholder="Buscar productos..." class="input" id="txtBuscar" type="text" onkeyup="filtrarProductos()">
+            </div>
+            <a href="/perfil" class="header-user navbar-user-name" title="Mi Perfil"><span class="header-user-icon">👤</span><strong>Mi Cuenta</strong></a>
+            <a href="/carrito" class="navbar-icon-btn cart-nav-button" title="Carrito" aria-label="Carrito">🛒<span class="cart-count-badge is-empty" data-cart-count>0</span></a>
+        </div>
+    </nav>
+
+    <main class="catalog-container">
+        <div class="slider-wrapper-layout">
+            <div class="products-grid" id="productGrid"></div>
+        </div>
+    </main>
+
+    <!-- MODAL DE PRODUCTO (ESTILIZADO DESDE /css/style.css) -->
+    <div id="productModal" class="product-modal-overlay bb-v5-overlay" role="dialog" aria-modal="true" aria-labelledby="modalNombre">
+        <div class="bb-v5-modal" role="document">
+            <button type="button" data-action="close-product-modal" class="bb-v5-close" aria-label="Cerrar detalles">×</button>
+
+            <section class="bb-v5-gallery" aria-label="Galería del producto">
+                <div class="bb-v5-gallery-label">BEAUTY BOOST <span>·</span> SELECCIÓN ESPECIAL</div>
+                <div class="bb-v5-image-frame">
+                    <img id="modalImg" src="https://res.cloudinary.com/rzxmfg9i/image/upload/cuidado_facial_serum_de_vitamina_c.png" alt="Producto" class="bb-v5-main-image">
+                </div>
+                <div class="bb-v5-gallery-footer">
+                    <button type="button" class="bb-v5-thumb is-active" data-action="modal-thumb" aria-label="Vista principal">
+                        <img id="modalThumb1" src="https://res.cloudinary.com/rzxmfg9i/image/upload/cuidado_facial_serum_de_vitamina_c.png" alt="Vista principal">
+                    </button>
+                    <span class="bb-v5-gallery-note">Vista del producto</span>
+                    <span id="modalColorSwatch" class="bb-v5-swatch" aria-hidden="true"></span>
+                </div>
+            </section>
+
+            <section class="bb-v5-details">
+                <div class="bb-v5-details-scroll">
+                    <div class="bb-v5-topline">
+                        <span id="modalCategoria" class="bb-v5-badge">NOVEDAD</span>
+                        <button type="button" id="modalFavoriteButton" data-action="modal-favorite" data-id="0" class="bb-v5-favorite" aria-pressed="false" title="Marcar como favorito">♡ <span>Añadir a favoritos</span></button>
+                    </div>
+
+                    <h2 id="modalNombre" class="bb-v5-title"></h2>
+                    <div id="modalPrecio" class="bb-v5-price"></div>
+
+                    <div class="bb-v5-stock">
+                        <span>Disponibilidad</span>
+                        <strong id="modalStock">En existencia</strong>
+                    </div>
+
+                    <div class="bb-v5-info-block">
+                        <h3>Descripción del producto</h3>
+                        <p id="modalDescripcion"></p>
+                    </div>
+                    <div class="bb-v5-info-block">
+                        <h3>Modo de empleo</h3>
+                        <p id="modalModoUso"></p>
+                    </div>
+
+                    <section class="bb-v5-reviews">
+                        <div class="bb-v5-reviews-head">
+                            <div>
+                                <span class="bb-v5-kicker">EXPERIENCIAS REALES</span>
+                                <h3>Reseñas de clientes</h3>
+                            </div>
+                            <div class="bb-v5-rating">
+                                <strong id="modalReviewAverage">0.0</strong>
+                                <span id="modalReviewStars">☆☆☆☆☆</span>
+                                <small id="modalReviewCount">0 reseñas</small>
+                            </div>
+                        </div>
+                        <div id="modalReviewsList" class="bb-v5-reviews-list">No pudimos cargar las reseñas</div>
+                    </section>
+                </div>
+
+                <div class="bb-v5-purchase">
+                    <div class="bb-v5-quantity">
+                        <span>Cantidad</span>
+                        <div class="modal-quantity-control">
+                            <button type="button" data-action="modal-qty" data-change="-1" class="modal-qty-btn" aria-label="Disminuir cantidad">−</button>
+                            <input type="text" id="modalCantidadInput" value="1" readonly aria-label="Cantidad">
+                            <button type="button" data-action="modal-qty" data-change="1" class="modal-qty-btn" aria-label="Aumentar cantidad">+</button>
+                        </div>
+                    </div>
+                    <button type="button" data-action="add-modal" class="bb-v5-add"><span>🛒</span> Añadir a la cesta</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const rawProducts = /*[[${productosCatalogo}]]*/ [];
+        window.products = (rawProducts || []).map(p => {
+            let catId = Number(p.categoriaIdCategoria || p.categoriaId || 0);
+            let cat = "todo";
+            if (catId === 1) cat = "cuidado-facial";
+            else if (catId === 2) cat = "maquillaje";
+            else if (catId === 11) cat = "brochas";
+            else if (catId === 13) cat = "novedades";
+            else if (catId === 14 || catId === 4) cat = "mas-vendidos";
+            else if (p.categoria) cat = String(p.categoria).toLowerCase().trim();
+
+            return {
+                id: p.idProducto || p.id,
+                nombre: p.nombreProd || p.nombre || '',
+                categoria: cat,
+                categoriaIdCategoria: catId,
+                precio: Number(p.precio || 0),
+                stock: Number(p.stock || 0),
+                imagen: p.imagenUrl || p.imagen || 'default.jpg',
+                descripcion: p.descripcionProd || p.descripcion || '',
+                badge: "Producto"
+            };
+        });
+    </script>
+
+    <script>
+        function normalizarTexto(txt) {
+            return String(txt || "")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .trim();
+        }
+
+        function filtrarProductos() {
+            const input = document.getElementById("txtBuscar");
+            const grid = document.getElementById("productGrid");
+            if (!input || !grid) return;
+
+            const termino = normalizarTexto(input.value);
+            const activeLink = document.querySelector(".navbar-categories .navbar-link.active");
+            const catActiva = activeLink ? activeLink.getAttribute("data-category") : "todo";
+
+            const filtrados = (window.products || []).filter(p => {
+                const coincideCat = (!catActiva || catActiva === "todo" || p.categoria === catActiva);
+                if (!coincideCat) return false;
+                if (!termino) return true;
+
+                const nombre = normalizarTexto(p.nombre);
+                const palabras = nombre.split(/\s+/);
+                return nombre.startsWith(termino) || palabras.some(pal => pal.startsWith(termino));
+            });
+
+            if (typeof window.renderProducts === "function") {
+                window.renderProducts(filtrados);
+            } else {
+                const cards = grid.querySelectorAll(".product-card, [data-product-id], > div");
+                cards.forEach(card => {
+                    const textoCard = normalizarTexto(card.textContent);
+                    const palabrasCard = textoCard.split(/\s+/);
+                    const coincide = !termino || palabrasCard.some(pal => pal.startsWith(termino));
+                    card.style.display = coincide ? "" : "none";
+                });
+            }
+        }
+
+        (function () {
+            const baseImg = document.body.getAttribute("data-cloudinary-base") || "";
+            function resolverImg(img) {
+                if (!img) return baseImg + "default.jpg";
+                if (/^https?:\/\//i.test(img) || img.startsWith("/")) return img;
+                return baseImg + img.replace(/^\/+/, "");
+            }
+            function formatearPrecio(valor) {
+                const n = Number(valor || 0);
+                return "$" + n.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            }
+            window.abrirModalProducto = function (prod) {
+                if (!prod) return;
+                const modal = document.getElementById("productModal");
+                if (!modal) return;
+                const urlImg = resolverImg(prod.imagen || prod.imagenUrl);
+
+                document.getElementById("modalImg").src = urlImg;
+                document.getElementById("modalImg").alt = prod.nombre || "Producto";
+                document.getElementById("modalThumb1").src = urlImg;
+                document.getElementById("modalThumb1").alt = prod.nombre || "Vista principal";
+                document.getElementById("modalNombre").textContent = prod.nombre || "Producto";
+                document.getElementById("modalPrecio").textContent = formatearPrecio(prod.precio);
+                document.getElementById("modalCategoria").textContent = (prod.categoria || "NOVEDAD").replace("-", " ");
+                document.getElementById("modalStock").textContent = Number(prod.stock || 0) > 0 ? "En existencia" : "Agotado";
+                document.getElementById("modalDescripcion").textContent = prod.descripcion || "Producto Beauty Boost.";
+                document.getElementById("modalModoUso").textContent = prod.modoUso || "Aplicar según las indicaciones del producto y ajustar la cantidad a la intensidad deseada.";
+                document.getElementById("modalCantidadInput").value = "1";
+
+                modal.classList.add("modal-visible");
+            };
+
+            function cerrarModal() {
+                const modal = document.getElementById("productModal");
+                if (modal) modal.classList.remove("modal-visible");
+            }
+
+            document.addEventListener("click", function (e) {
+                const modal = document.getElementById("productModal");
+                if (!modal) return;
+
+                if (e.target.closest('[data-action="close-product-modal"]') || e.target === modal) {
+                    cerrarModal();
+                    return;
+                }
+                const qtyBtn = e.target.closest('[data-action="modal-qty"]');
+                if (qtyBtn) {
+                    const inputQty = document.getElementById("modalCantidadInput");
+                    const delta = Number(qtyBtn.getAttribute("data-change") || 0);
+                    const actual = Math.max(1, Number(inputQty.value || 1) + delta);
+                    inputQty.value = String(actual);
+                    return;
+                }
+                const thumbBtn = e.target.closest('[data-action="modal-thumb"]');
+                if (thumbBtn) {
+                    const thumbImg = thumbBtn.querySelector("img");
+                    if (thumbImg && thumbImg.src) document.getElementById("modalImg").src = thumbImg.src;
+                    return;
+                }
+
+                const card = e.target.closest(".product-card, [data-product-id], #productGrid > div");
+                if (card && !e.target.closest("button:not(.btn-detalles):not([data-action='ver-detalle']), a")) {
+                    const idAttr = card.getAttribute("data-product-id") || card.getAttribute("data-id");
+                    const idx = Array.from(card.parentElement.children).indexOf(card);
+                    const prod = (window.products || []).find(item => String(item.id) === String(idAttr)) || (window.products || [])[idx];
+                    if (prod && !modal.classList.contains("modal-visible")) {
+                        window.abrirModalProducto(prod);
+                    }
+                }
+            });
+
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Escape") cerrarModal();
+            });
+        })();
+    </script>
+
+    <script src="/js/validaciones.js"></script>
+        <script>
+        (function () {
+            const KEY_FAV = "bb_favoritos_ids";
+            const KEY_CART = "bb_carrito_items";
+
+            function leerIds(key) {
+                try { return JSON.parse(localStorage.getItem(key) || "[]"); }
+                catch (_) { return []; }
+            }
+            function guardar(key, val) {
+                localStorage.setItem(key, JSON.stringify(val));
+            }
+
+            window.esFavorito = function (id) {
+                return leerIds(KEY_FAV).map(String).includes(String(id));
+            };
+
+            window.toggleFavorito = function (id) {
+                const pid = String(id);
+                let favs = leerIds(KEY_FAV).map(String);
+                if (favs.includes(pid)) {
+                    favs = favs.filter(x => x !== pid);
+                } else {
+                    favs.push(pid);
+                }
+                guardar(KEY_FAV, favs);
+                sincronizarUI();
+                return favs.includes(pid);
+            };
+
+            window.agregarAlCarritoLocal = function (prod, cantidad) {
+                if (!prod) return;
+                const qty = Math.max(1, Number(cantidad || 1));
+                const cart = leerIds(KEY_CART);
+                const idx = cart.findIndex(item => String(item.id) === String(prod.id));
+                if (idx >= 0) {
+                    cart[idx].cantidad = Number(cart[idx].cantidad || 1) + qty;
+                } else {
+                    cart.push({
+                        id: prod.id,
+                        nombre: prod.nombre,
+                        precio: Number(prod.precio || 0),
+                        imagen: prod.imagen,
+                        cantidad: qty
+                    });
+                }
+                guardar(KEY_CART, cart);
+                actualizarBadgeCarrito();
+            };
+
+            function actualizarBadgeCarrito() {
+                const cart = leerIds(KEY_CART);
+                const total = cart.reduce((acc, it) => acc + Number(it.cantidad || 1), 0);
+                document.querySelectorAll("[data-cart-count]").forEach(el => {
+                    el.textContent = String(total);
+                    el.classList.toggle("is-empty", total === 0);
+                });
+            }
+
+            function sincronizarUI() {
+                // Sincronizar corazones en las tarjetas del catálogo
+                document.querySelectorAll("#productGrid .product-card, #productGrid [data-product-id], #productGrid > div").forEach((card, idx) => {
+                    const idAttr = card.getAttribute("data-product-id") || card.getAttribute("data-id");
+                    const prod = (window.products || []).find(p => String(p.id) === String(idAttr)) || (window.products || [])[idx];
+                    if (!prod) return;
+                    card.setAttribute("data-product-id", prod.id);
+                    const activo = window.esFavorito(prod.id);
+                    const favBtn = card.querySelector("[data-action='favorite'], .favorite-btn, .btn-favorite, button[aria-label*='favorit' i], button[title*='favorit' i]");
+                    if (favBtn) {
+                        favBtn.classList.toggle("is-active", activo);
+                        favBtn.classList.toggle("active", activo);
+                        favBtn.setAttribute("aria-pressed", String(activo));
+                        if (favBtn.textContent.includes("♡") || favBtn.textContent.includes("♥")) {
+                            favBtn.textContent = activo ? "♥" : "♡";
+                        }
+                    }
+                });
+
+                // Sincronizar botón de favorito dentro del modal
+                const modalFav = document.getElementById("modalFavoriteButton");
+                if (modalFav) {
+                    const mid = modalFav.getAttribute("data-id");
+                    const activo = window.esFavorito(mid);
+                    modalFav.classList.toggle("is-active", activo);
+                    modalFav.setAttribute("aria-pressed", String(activo));
+                    modalFav.innerHTML = activo
+                        ? "♥ <span>En tus favoritos</span>"
+                        : "♡ <span>Añadir a favoritos</span>";
+                }
+            }
+
+            // Enlazar data-id al abrir el modal
+            const origAbrir = window.abrirModalProducto;
+            window.abrirModalProducto = function (prod) {
+                if (typeof origAbrir === "function") origAbrir(prod);
+                const modalFav = document.getElementById("modalFavoriteButton");
+                const modalAdd = document.querySelector('#productModal [data-action="add-modal"]');
+                if (modalFav && prod) modalFav.setAttribute("data-id", prod.id);
+                if (modalAdd && prod) modalAdd.setAttribute("data-id", prod.id);
+                sincronizarUI();
+            };
+
+            document.addEventListener("click", function (e) {
+                // 1. Corazón dentro del modal
+                const modalFavBtn = e.target.closest("#modalFavoriteButton, [data-action='modal-favorite']");
+                if (modalFavBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = modalFavBtn.getAttribute("data-id");
+                    if (id && id !== "0") window.toggleFavorito(id);
+                    return;
+                }
+
+                // 2. Corazón en la tarjeta del catálogo
+                const cardFavBtn = e.target.closest("#productGrid [data-action='favorite'], #productGrid .favorite-btn, #productGrid .btn-favorite, #productGrid button[aria-label*='favorit' i], #productGrid button[title*='favorit' i]");
+                if (cardFavBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = cardFavBtn.closest(".product-card, [data-product-id], #productGrid > div");
+                    const idAttr = cardFavBtn.getAttribute("data-id") || (card && (card.getAttribute("data-product-id") || card.getAttribute("data-id")));
+                    const idx = card ? Array.from(card.parentElement.children).indexOf(card) : -1;
+                    const prod = (window.products || []).find(p => String(p.id) === String(idAttr)) || (window.products || [])[idx];
+                    if (prod) window.toggleFavorito(prod.id);
+                    return;
+                }
+
+                // 3. Botón "+" en la tarjeta del catálogo para añadir al carrito
+                const cardAddBtn = e.target.closest("#productGrid [data-action='add-cart'], #productGrid .add-to-cart-btn, #productGrid .btn-add-cart, #productGrid button");
+                if (cardAddBtn && (cardAddBtn.textContent.trim() === "+" || cardAddBtn.matches("[data-action='add-cart'], .add-to-cart-btn, .btn-add-cart"))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = cardAddBtn.closest(".product-card, [data-product-id], #productGrid > div");
+                    const idAttr = cardAddBtn.getAttribute("data-id") || (card && (card.getAttribute("data-product-id") || card.getAttribute("data-id")));
+                    const idx = card ? Array.from(card.parentElement.children).indexOf(card) : -1;
+                    const prod = (window.products || []).find(p => String(p.id) === String(idAttr)) || (window.products || [])[idx];
+                    if (prod) {
+                        window.agregarAlCarritoLocal(prod, 1);
+                        const origTxt = cardAddBtn.textContent;
+                        cardAddBtn.textContent = "✓";
+                        setTimeout(() => { cardAddBtn.textContent = origTxt; }, 700);
+                    }
+                    return;
+                }
+
+                // 4. Botón "Añadir a la cesta" dentro del modal
+                const modalAddBtn = e.target.closest('#productModal [data-action="add-modal"]');
+                if (modalAddBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = modalAddBtn.getAttribute("data-id");
+                    const prod = (window.products || []).find(p => String(p.id) === String(id));
+                    const qty = Number((document.getElementById("modalCantidadInput") || {}).value || 1);
+                    if (prod) {
+                        window.agregarAlCarritoLocal(prod, qty);
+                        const origHtml = modalAddBtn.innerHTML;
+                        modalAddBtn.innerHTML = "<span>✓</span> Añadido a la cesta";
+                        setTimeout(() => { modalAddBtn.innerHTML = origHtml; }, 900);
+                    }
+                }
+            }, true);
+
+            window.addEventListener("DOMContentLoaded", function () {
+                actualizarBadgeCarrito();
+                setTimeout(sincronizarUI, 150);
+            });
+            setTimeout(() => { actualizarBadgeCarrito(); sincronizarUI(); }, 300);
+        })();
+    </script>
+    <script src="/js/beauty-boost.js"></script>
+
+    <footer class="footer-social-links"><span>Síguenos en Beauty Boost</span><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">TikTok</a></footer>
+</body>
+</html>

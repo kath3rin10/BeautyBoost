@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+ <title>Beauty Boost | Gestión de Usuarios</title>
+ <th:block th:replace="~{admin/includes/head :: head}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}">`n</head>
+<body class="bb-admin-body">
+
+<aside th:replace="~{admin/includes/sidebar :: sidebar('usuarios')}"></aside>
+
+<main class="bb-main">
+ <header th:replace="~{admin/includes/topbar :: topbar('GESTIÓN DE USUARIOS')}"></header>
+
+ <section class="bb-content">
+  <div id="alertaUsuarios" class="alert-success" style="display: none;"></div>
+  <div id="alertaErrorUsuarios" class="alert-danger" style="display: none;"></div>
+
+  <div class="admin-page-heading">
+   <div>
+    <span class="eyebrow">CENTRO DE CONTROL</span>
+    <h1>Gestión de usuarios</h1>
+    <p>Administra cuentas, roles y estados de acceso de clientes y administradores.</p>
+   </div>
+  </div>
+
+  <div class="content-card">
+   <div class="card-header">
+    <h3>Listado General de Usuarios</h3>
+    <span class="bb-inline-ccdca83d16">Consulta perfiles, cambia estados o administra permisos</span>
+   </div>
+
+   <table class="data-table">
+    <thead>
+    <tr>
+     <th>ID</th>
+     <th>Nombre Completo</th>
+     <th>Correo Electrónico</th>
+     <th>Teléfono</th>
+     <th>Rol</th>
+     <th>Estado</th>
+     <th>Acciones</th>
+    </tr>
+    </thead>
+    <tbody id="tablaUsuariosBody">
+    <tr>
+     <td colspan="7" class="bb-inline-6c9cd9926d">Cargando usuarios...</td>
+    </tr>
+    </tbody>
+   </table>
+  </div>
+ </section>
+</main>
+
+<th:block th:replace="~{admin/includes/footer :: footer}"></th:block>
+
+<script>
+ let listaUsuariosGlobal = [];
+
+ document.addEventListener("DOMContentLoaded", () => {
+  cargarUsuarios();
+
+  const searchInput = document.getElementById("adminSearch");
+  if (searchInput) {
+   searchInput.addEventListener("input", (e) => {
+    const termino = e.target.value.toLowerCase().trim();
+    const filtrados = listaUsuariosGlobal.filter(u => {
+     const id = String(u.idUsuario || u.id || "");
+     const nombre = `${u.nombre || ""} ${u.apellido || ""}`.toLowerCase();
+     const correo = (u.correo || u.email || "").toLowerCase();
+     const telefono = String(u.telefono || "").toLowerCase();
+     const rol = obtenerNombreRol(u).toLowerCase();
+     return id.includes(termino) ||
+             nombre.includes(termino) ||
+             correo.includes(termino) ||
+             telefono.includes(termino) ||
+             rol.includes(termino);
+    });
+    renderizarTablaUsuarios(filtrados);
+   });
+  }
+ });
+
+ async function cargarUsuarios() {
+  const tbody = document.getElementById("tablaUsuariosBody");
+  try {
+   const resp = await fetch("/api/usuario");
+   if (!resp.ok) throw new Error("Error HTTP " + resp.status);
+   const data = await resp.json();
+   listaUsuariosGlobal = Array.isArray(data) ? data : (data.content || []);
+   renderizarTablaUsuarios(listaUsuariosGlobal);
+  } catch (err) {
+   console.error("Error cargando usuarios:", err);
+   tbody.innerHTML = `<tr><td colspan="7" class="bb-inline-6c9cd9926d">No se pudieron cargar los usuarios desde el servidor.</td></tr>`;
+  }
+ }
+
+ function obtenerIdUsuario(u) {
+  return u.idUsuario ?? u.id ?? 0;
+ }
+
+ function obtenerIdRol(u) {
+  if (typeof u.rolesIdRol === "number") return u.rolesIdRol;
+  if (u.rol && typeof u.rol === "object") return u.rol.idRol ?? u.rol.id ?? 2;
+  return 2;
+ }
+
+ function obtenerNombreRol(u) {
+  if (u.rol && typeof u.rol === "object" && u.rol.nombre) return u.rol.nombre;
+  return obtenerIdRol(u) === 1 ? "Administrador" : "Cliente";
+ }
+
+ function esUsuarioActivo(u) {
+  return u.estado === true || u.estado === 1 || String(u.estado).toLowerCase() === "activo";
+ }
+
+ function renderizarTablaUsuarios(usuarios) {
+  const tbody = document.getElementById("tablaUsuariosBody");
+  if (!usuarios || usuarios.length === 0) {
+   tbody.innerHTML = `<tr><td colspan="7" class="bb-inline-6c9cd9926d">No hay usuarios registrados en el sistema.</td></tr>`;
+   return;
+  }
+
+  tbody.innerHTML = usuarios.map(u => {
+   const id = obtenerIdUsuario(u);
+   const nombreCompleto = `${u.nombre || ""} ${u.apellido || ""}`.trim() || "Sin nombre";
+   const correo = u.correo || u.email || "-";
+   const telefono = u.telefono || "N/A";
+   const rolNombre = obtenerNombreRol(u);
+   const activo = esUsuarioActivo(u);
+
+   return `
+                <tr>
+                    <td><strong>#${id}</strong></td>
+                    <td>${nombreCompleto}</td>
+                    <td>${correo}</td>
+                    <td>${telefono}</td>
+                    <td>${rolNombre}</td>
+                    <td>
+                        <span class="bb-inline-90038280ae">
+                            ${activo ? "Activo" : "Inactivo"}
+                        </span>
+                    </td>
+                    <td style="display: flex; gap: 0.5rem; align-items: center;">
+                        <a href="/admin/usuarios/perfil?id=${id}" class="btn-secondary" title="Ver o editar perfil">
+                            <i class="fas fa-user-pen"></i> Perfil
+                        </a>
+                        <button type="button"
+                                class="btn-primary"
+                                onclick="alternarEstadoUsuario(${id})"
+                                title="${activo ? 'Desactivar usuario' : 'Activar usuario'}">
+                            <i class="fas ${activo ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                            ${activo ? "Desactivar" : "Activar"}
+                        </button>
+                    </td>
+                </tr>
+            `;
+  }).join("");
+ }
+
+ async function alternarEstadoUsuario(idUsuario) {
+  const usuario = listaUsuariosGlobal.find(u => obtenerIdUsuario(u) === idUsuario);
+  if (!usuario) return;
+
+  const nuevoEstado = esUsuarioActivo(usuario) ? 0 : 1;
+  const payload = {
+   ...usuario,
+   idUsuario: idUsuario,
+   estado: nuevoEstado
+  };
+
+  ocultarAlertas();
+
+  try {
+   const resp = await fetch(`/api/usuario/${idUsuario}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+   });
+
+   if (!resp.ok) throw new Error("No fue posible cambiar el estado (HTTP " + resp.status + ")");
+
+   usuario.estado = nuevoEstado;
+   renderizarTablaUsuarios(listaUsuariosGlobal);
+   mostrarExito(`Estado del usuario #${idUsuario} actualizado a ${nuevoEstado === 1 ? "Activo" : "Inactivo"}.`);
+  } catch (err) {
+   console.error(err);
+   mostrarError(err.message || "Error al actualizar el estado del usuario.");
+  }
+ }
+
+ function mostrarExito(msg) {
+  const el = document.getElementById("alertaUsuarios");
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 3000);
+ }
+
+ function mostrarError(msg) {
+  const el = document.getElementById("alertaErrorUsuarios");
+  el.textContent = msg;
+  el.style.display = "block";
+ }
+
+ function ocultarAlertas() {
+  document.getElementById("alertaUsuarios").style.display = "none";
+  document.getElementById("alertaErrorUsuarios").style.display = "none";
+ }
+</script>
+</body>
+</html>
+
